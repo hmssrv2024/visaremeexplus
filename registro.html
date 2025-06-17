@@ -1,0 +1,3545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visa - Registro de Cuenta Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================================
+           VARIABLES CSS
+           ============================================================================ */
+        :root {
+            --visa-blue: #1a1f71;
+            --visa-blue-light: #3b4998;
+            --visa-blue-dark: #0d1142;
+            --visa-gold: #f7b500;
+            --background: #ffffff;
+            --surface: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.98);
+            --glass-border: rgba(26, 31, 113, 0.1);
+            --shadow-light: rgba(255, 255, 255, 1);
+            --shadow-dark: rgba(26, 31, 113, 0.1);
+            --text-primary: #1a1f71;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+            --vh: 1vh;
+        }
+
+        /* ============================================================================
+           RESET Y BASE
+           ============================================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            overflow: hidden;
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* ============================================================================
+           CONTENEDOR PRINCIPAL
+           ============================================================================ */
+        .container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            background: #ffffff;
+            border: 1px solid var(--border);
+            box-shadow: 
+                0 20px 40px rgba(26, 31, 113, 0.1),
+                0 10px 20px rgba(26, 31, 113, 0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0;
+        }
+
+        /* ============================================================================
+           HEADER Y LOGO
+           ============================================================================ */
+        .header {
+            padding: 20px 20px 16px;
+            text-align: center;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .visa-logo {
+            width: 80px;
+            height: auto;
+            filter: brightness(1) contrast(1);
+            object-fit: contain;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ============================================================================
+           USUARIOS CONECTADOS
+           ============================================================================ */
+        .users-online {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--success);
+            z-index: 5;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-led {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-led 2s infinite;
+        }
+
+        .users-count {
+            font-weight: 700;
+            transition: transform 0.3s ease;
+        }
+
+        .users-text {
+            opacity: 0.8;
+        }
+
+        /* ============================================================================
+           BARRA DE PROGRESO
+           ============================================================================ */
+        .progress-container {
+            padding: 12px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--visa-blue), var(--visa-blue-light), var(--visa-gold));
+            border-radius: 12px;
+            transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            width: 0%;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .progress-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-percentage {
+            color: var(--visa-blue);
+            font-weight: 700;
+        }
+
+        /* ============================================================================
+           BOTÓN DE SALIDA
+           ============================================================================ */
+        .exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #ffffff;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 4px 8px rgba(26, 31, 113, 0.1),
+                0 2px 4px rgba(26, 31, 113, 0.05);
+            z-index: 10;
+            border: 1px solid var(--border);
+        }
+
+        .exit-btn:hover {
+            color: var(--error);
+            transform: scale(1.05);
+            box-shadow: 
+                0 8px 16px rgba(239, 68, 68, 0.15),
+                0 4px 8px rgba(239, 68, 68, 0.1);
+            background: #ffffff;
+        }
+
+        /* ============================================================================
+           CONTENIDO Y PASOS
+           ============================================================================ */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+            background: #ffffff;
+        }
+
+        .step {
+            display: none;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px 20px;
+            flex-direction: column;
+            min-height: 0;
+            background: #ffffff;
+        }
+
+        .step.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.3;
+            flex-shrink: 0;
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================================
+           PANTALLA DE BIENVENIDA
+           ============================================================================ */
+        .welcome-screen {
+            text-align: center;
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: #ffffff;
+        }
+
+        .welcome-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 24px;
+            stroke: var(--visa-blue);
+            flex-shrink: 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* ============================================================================
+           FORMULARIOS
+           ============================================================================ */
+        .form-group {
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 2px 4px rgba(26, 31, 113, 0.05),
+                0 1px 2px rgba(26, 31, 113, 0.1);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--visa-blue);
+            box-shadow: 
+                0 0 0 4px rgba(26, 31, 113, 0.1),
+                0 4px 8px rgba(26, 31, 113, 0.1),
+                0 2px 4px rgba(26, 31, 113, 0.15);
+            transform: translateY(-1px);
+            background: #ffffff;
+        }
+
+        .form-input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+            background: #ffffff;
+        }
+
+        .form-input.success {
+            border-color: var(--success);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            background: #ffffff;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* ============================================================================
+           GRILLAS DE SELECCIÓN
+           ============================================================================ */
+        .select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .option-card {
+            padding: 16px 12px;
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 4px 8px rgba(26, 31, 113, 0.05),
+                0 2px 4px rgba(26, 31, 113, 0.1);
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(26, 31, 113, 0.05), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option-card:hover::before {
+            left: 100%;
+        }
+
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 16px rgba(26, 31, 113, 0.15),
+                0 4px 8px rgba(26, 31, 113, 0.1);
+            background: #ffffff;
+        }
+
+        .option-card.selected {
+            border-color: var(--visa-blue);
+            background: rgba(26, 31, 113, 0.05);
+            box-shadow: 
+                0 8px 16px rgba(26, 31, 113, 0.2),
+                0 4px 8px rgba(26, 31, 113, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .option-card .icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 10px;
+            stroke: var(--visa-blue);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .option-card:hover .icon,
+        .option-card.selected .icon {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .option-card .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* ============================================================================
+           BOTONES
+           ============================================================================ */
+        .button-group {
+            display: flex;
+            gap: 14px;
+            margin-top: auto;
+            padding-top: 20px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--visa-blue) 0%, var(--visa-blue-light) 100%);
+            color: white;
+            box-shadow: 
+                0 8px 16px rgba(26, 31, 113, 0.25),
+                0 4px 8px rgba(26, 31, 113, 0.15);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 24px rgba(26, 31, 113, 0.3),
+                0 6px 12px rgba(26, 31, 113, 0.2);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            box-shadow: 
+                0 4px 8px rgba(26, 31, 113, 0.05),
+                0 2px 4px rgba(26, 31, 113, 0.1);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 16px rgba(26, 31, 113, 0.1),
+                0 4px 8px rgba(26, 31, 113, 0.1);
+            background: #ffffff;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: 
+                0 2px 4px rgba(26, 31, 113, 0.05),
+                0 1px 2px rgba(26, 31, 113, 0.1);
+        }
+
+        /* ============================================================================
+           CONTRASEÑAS
+           ============================================================================ */
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            background: var(--border);
+            color: var(--text-primary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .strength-meter {
+            margin-top: 12px;
+        }
+
+        .strength-bar {
+            height: 5px;
+            background: var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 8px;
+        }
+
+        .strength-text {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================================
+           PIN
+           ============================================================================ */
+        .pin-input {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .pin-digit {
+            width: 48px;
+            height: 48px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: #ffffff;
+            color: var(--text-primary);
+            box-shadow: 
+                0 4px 8px rgba(26, 31, 113, 0.05),
+                0 2px 4px rgba(26, 31, 113, 0.1);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .pin-digit:focus {
+            outline: none;
+            border-color: var(--visa-blue);
+            box-shadow: 
+                0 0 0 4px rgba(26, 31, 113, 0.1),
+                0 4px 8px rgba(26, 31, 113, 0.1),
+                0 2px 4px rgba(26, 31, 113, 0.15);
+            transform: translateY(-1px) scale(1.05);
+            background: #ffffff;
+        }
+
+        .pin-digit.success {
+            border-color: var(--success);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            background: #ffffff;
+        }
+
+        .pin-digit.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+            background: #ffffff;
+        }
+
+        /* ============================================================================
+           MENSAJES
+           ============================================================================ */
+        .personalized-message {
+            background: rgba(26, 31, 113, 0.03);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--visa-blue);
+            font-weight: 500;
+            box-shadow: 
+                0 4px 8px rgba(26, 31, 113, 0.05),
+                0 2px 4px rgba(26, 31, 113, 0.1);
+            font-size: 13px;
+            flex-shrink: 0;
+            line-height: 1.5;
+        }
+
+        .personalized-message.success {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: rgba(239, 68, 68, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            animation: slideInDown 0.3s ease;
+        }
+
+        .success-message {
+            color: var(--success);
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            animation: slideInDown 0.3s ease;
+        }
+
+        /* ============================================================================
+           RESUMEN
+           ============================================================================ */
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .summary-value {
+            color: var(--text-secondary);
+            text-align: right;
+            font-weight: 500;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        /* ============================================================================
+           LOADING Y ANIMACIONES
+           ============================================================================ */
+        .loading-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            text-align: center;
+            justify-content: center;
+            height: 100%;
+            background: #ffffff;
+        }
+
+        .spinner {
+            width: 72px;
+            height: 72px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--visa-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 
+                0 8px 16px rgba(26, 31, 113, 0.15),
+                0 4px 8px rgba(26, 31, 113, 0.1);
+        }
+
+        /* ============================================================================
+           LOGIN Y RECUPERACIÓN
+           ============================================================================ */
+        .forgot-password {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .forgot-password a {
+            color: var(--visa-blue);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+            color: var(--visa-blue-dark);
+        }
+
+        /* ============================================================================
+           SOPORTE FLOTANTE
+           ============================================================================ */
+        .support-float {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .support-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--visa-blue) 0%, var(--visa-blue-light) 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 8px 24px rgba(26, 31, 113, 0.25),
+                0 4px 12px rgba(26, 31, 113, 0.15);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .support-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 12px 32px rgba(26, 31, 113, 0.3),
+                0 6px 16px rgba(26, 31, 113, 0.2);
+        }
+
+        .support-icon {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .support-menu {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 
+                0 16px 32px rgba(26, 31, 113, 0.2),
+                0 8px 16px rgba(26, 31, 113, 0.15);
+            overflow: hidden;
+            min-width: 220px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+
+        .support-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border);
+            background: #ffffff;
+        }
+
+        .support-option:last-child {
+            border-bottom: none;
+        }
+
+        .support-option:hover {
+            background: rgba(26, 31, 113, 0.03);
+            transform: translateX(5px);
+        }
+
+        .support-option-icon {
+            width: 20px;
+            height: 20px;
+            stroke: var(--visa-blue);
+            flex-shrink: 0;
+        }
+
+        .support-option span {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* ============================================================================
+           ANIMACIONES Y KEYFRAMES
+           ============================================================================ */
+        @keyframes pulse-led {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: scale(1.2); 
+            }
+        }
+
+        @keyframes shimmer {
+            0% { 
+                transform: translateX(-100%); 
+            }
+            100% { 
+                transform: translateX(100%); 
+            }
+        }
+
+        @keyframes spin {
+            0% { 
+                transform: rotate(0deg); 
+            }
+            100% { 
+                transform: rotate(360deg); 
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px); 
+            }
+            50% { 
+                transform: translateY(-10px); 
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        @keyframes slideOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { 
+                transform: translateX(0); 
+            }
+            10%, 30%, 50%, 70%, 90% { 
+                transform: translateX(-5px); 
+            }
+            20%, 40%, 60%, 80% { 
+                transform: translateX(5px); 
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+            }
+            50% { 
+                transform: scale(1.05); 
+            }
+        }
+
+        /* ============================================================================
+           RESPONSIVE DESIGN
+           ============================================================================ */
+        @media (max-height: 640px) {
+            .step-title {
+                font-size: 18px;
+                margin-bottom: 6px;
+            }
+            
+            .step-description {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .option-card {
+                padding: 12px 10px;
+                min-height: 80px;
+            }
+            
+            .button-group {
+                padding-top: 16px;
+            }
+            
+            .pin-digit {
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
+            }
+            
+            .welcome-screen {
+                padding: 20px 0;
+            }
+            
+            .welcome-icon {
+                width: 56px;
+                height: 56px;
+                margin-bottom: 20px;
+            }
+
+            .users-online {
+                bottom: 16px;
+                left: 16px;
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .step {
+                padding: 16px 16px;
+            }
+            
+            .header {
+                padding: 16px 16px 12px;
+            }
+            
+            .select-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .visa-logo {
+                width: 60px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-group .form-group {
+                flex: none;
+            }
+            
+            .pin-input {
+                gap: 10px;
+            }
+            
+            .pin-digit {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .users-online {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                margin-top: 10px;
+                justify-content: center;
+            }
+        }
+
+        /* ============================================================================
+           ACCESIBILIDAD Y PREFERENCIAS
+           ============================================================================ */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ============================================================================
+           PREVENCIÓN DE SCROLL
+           ============================================================================ */
+        html {
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+        }
+
+        body {
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            -webkit-overflow-scrolling: none;
+            overscroll-behavior: none;
+        }
+
+        .container {
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: none;
+        }
+
+        .content {
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="exit-btn" onclick="exitRegistration()" aria-label="Cerrar registro">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9,22 9,12 15,12 15,22"></polyline>
+            </svg>
+        </button>
+        
+        <div class="header">
+            <div class="logo-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa Logo" class="visa-logo">
+                <div class="subtitle">Tu cuenta digital sin límites</div>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+                <span>Registro en progreso</span>
+                <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+        </div>
+
+        <div class="users-online" id="usersOnline">
+            <div class="status-led"></div>
+            <span class="users-count" id="usersCount">1,247</span>
+            <span class="users-text">usuarios conectados</span>
+        </div>
+
+        <div class="content">
+            <!-- Paso 0: Bienvenida -->
+            <div class="step active" id="step0">
+                <div class="welcome-screen">
+                    <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                    <div class="step-title">¡Bienvenido a Visa Digital!</div>
+                    <div class="step-description">
+                        Abre tu cuenta digital en minutos y disfruta de todos los beneficios de una tarjeta Visa internacional con tecnología de vanguardia.
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="startRegistration()">
+                            <span>Comenzar Registro</span>
+                            <div class="btn-ripple"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 1: Nombres y Apellidos -->
+            <div class="step" id="step1">
+                <div class="step-title">¿Cuál es tu nombre completo?</div>
+                <div class="step-description">Ingresa tu nombre como aparece en tu documento de identidad oficial</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Nombres</label>
+                    <input type="text" class="form-input" id="firstName" placeholder="Ej: Juan Carlos" autocomplete="given-name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Apellidos</label>
+                    <input type="text" class="form-input" id="lastName" placeholder="Ej: García Pérez" autocomplete="family-name">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nameNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 2: Preferencia de nombre y género -->
+            <div class="step" id="step2">
+                <div class="step-title" id="namePreferenceTitle">¿Cómo prefieres que te llamemos?</div>
+                <div class="step-description">Selecciona el nombre con el que te sientes más cómodo</div>
+                
+                <div class="select-grid" id="nameOptions"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">¿Cómo te identificas?</label>
+                    <div class="select-grid">
+                        <div class="option-card" data-gender="él">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span class="label">Él</span>
+                        </div>
+                        <div class="option-card" data-gender="ella">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span class="label">Ella</span>
+                        </div>
+                        <div class="option-card" data-gender="elle">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="m22 2-5 10-5-10h10Z"></path>
+                            </svg>
+                            <span class="label">Elle</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="genderNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 3: Fecha de nacimiento -->
+            <div class="step" id="step3">
+                <div class="step-title" id="birthdateTitle">¿Cuál es tu fecha de nacimiento?</div>
+                <div class="step-description" id="birthdateDescription">Necesitamos verificar que tienes al menos 18 años para abrir tu cuenta</div>
+                
+                <div class="input-group">
+                    <div class="form-group">
+                        <label class="form-label">Día</label>
+                        <input type="number" class="form-input" id="birthDay" min="1" max="31" placeholder="DD" autocomplete="bday-day">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mes</label>
+                        <select class="form-input" id="birthMonth" autocomplete="bday-month">
+                            <option value="">Mes</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Año</label>
+                        <input type="number" class="form-input" id="birthYear" min="1900" max="2006" placeholder="AAAA" autocomplete="bday-year">
+                    </div>
+                </div>
+                
+                <div id="ageConfirmation" style="display: none;"></div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="birthdateNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 4: País de residencia -->
+            <div class="step" id="step4">
+                <div class="step-title" id="countryTitle">¿En qué país resides actualmente?</div>
+                <div class="step-description">Selecciona tu país de residencia actual para configurar los servicios disponibles</div>
+                
+                <div class="form-group">
+                    <select class="form-input" id="country" autocomplete="country">
+                        <option value="">Selecciona tu país</option>
+                        <option value="ve">🇻🇪 Venezuela</option>
+                        <option value="co">🇨🇴 Colombia</option>
+                        <option value="pe">🇵🇪 Perú</option>
+                        <option value="ec">🇪🇨 Ecuador</option>
+                        <option value="ar">🇦🇷 Argentina</option>
+                        <option value="cl">🇨🇱 Chile</option>
+                        <option value="uy">🇺🇾 Uruguay</option>
+                        <option value="py">🇵🇾 Paraguay</option>
+                        <option value="bo">🇧🇴 Bolivia</option>
+                        <option value="br">🇧🇷 Brasil</option>
+                        <option value="mx">🇲🇽 México</option>
+                        <option value="us">🇺🇸 Estados Unidos</option>
+                        <option value="es">🇪🇸 España</option>
+                        <option value="pa">🇵🇦 Panamá</option>
+                        <option value="other">🌍 Otro</option>
+                    </select>
+                </div>
+                
+                <div id="countryMessage" style="display: none;"></div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="countryNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 5: Estado de Venezuela -->
+            <div class="step" id="step5">
+                <div class="step-title" id="stateTitle">¿En qué estado de Venezuela vives?</div>
+                <div class="step-description">Selecciona el estado donde tienes tu residencia principal</div>
+                
+                <div class="form-group">
+                    <select class="form-input" id="state" autocomplete="address-level1">
+                        <option value="">Selecciona tu estado</option>
+                        <option value="amazonas">Amazonas</option>
+                        <option value="anzoategui">Anzoátegui</option>
+                        <option value="apure">Apure</option>
+                        <option value="aragua">Aragua</option>
+                        <option value="barinas">Barinas</option>
+                        <option value="bolivar">Bolívar</option>
+                        <option value="carabobo">Carabobo</option>
+                        <option value="cojedes">Cojedes</option>
+                        <option value="delta_amacuro">Delta Amacuro</option>
+                        <option value="distrito_capital">Distrito Capital</option>
+                        <option value="falcon">Falcón</option>
+                        <option value="guarico">Guárico</option>
+                        <option value="lara">Lara</option>
+                        <option value="merida">Mérida</option>
+                        <option value="miranda">Miranda</option>
+                        <option value="monagas">Monagas</option>
+                        <option value="nueva_esparta">Nueva Esparta</option>
+                        <option value="portuguesa">Portuguesa</option>
+                        <option value="sucre">Sucre</option>
+                        <option value="tachira">Táchira</option>
+                        <option value="trujillo">Trujillo</option>
+                        <option value="vargas">Vargas</option>
+                        <option value="yaracuy">Yaracuy</option>
+                        <option value="zulia">Zulia</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="stateNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 6: Tipo de documento -->
+            <div class="step" id="step6">
+                <div class="step-title" id="documentTitle">¿Con qué documento te vas a identificar?</div>
+                <div class="step-description">Selecciona el documento que usarás para verificar tu identidad</div>
+                
+                <div class="select-grid">
+                    <div class="option-card" data-document-type="ci">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="label">Cédula de Identidad</span>
+                    </div>
+                    <div class="option-card" data-document-type="passport">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            <circle cx="12" cy="8" r="2"></circle>
+                            <path d="m8 14 8 0"></path>
+                            <path d="m8 18 5 0"></path>
+                        </svg>
+                        <span class="label">Pasaporte</span>
+                    </div>
+                    <div class="option-card" data-document-type="license">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                            <circle cx="12" cy="5" r="2"></circle>
+                            <path d="m12 7-2 4h4l-2-4Z"></path>
+                        </svg>
+                        <span class="label">Licencia de Conducir</span>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="documentNumberGroup" style="display: none;">
+                    <label class="form-label" id="documentLabel">Número del documento</label>
+                    <input type="text" class="form-input" id="documentNumber" placeholder="" autocomplete="off">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="documentNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 7: Email -->
+            <div class="step" id="step7">
+                <div class="step-title" id="emailTitle">¿Cuál es tu correo electrónico?</div>
+                <div class="step-description">Usaremos este email para enviarte notificaciones importantes de tu cuenta y para acceder a nuestros servicios</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-input" id="email" placeholder="tu@correo.com" autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirma tu correo electrónico</label>
+                    <input type="email" class="form-input" id="emailConfirm" placeholder="tu@correo.com" autocomplete="email">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="emailNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 8: Verificación de email -->
+            <div class="step" id="step8">
+                <div class="step-title" id="verificationTitle">Verifica tu correo electrónico</div>
+                <div class="step-description">Hemos enviado un código de 20 dígitos a tu correo. Ingrésalo aquí:</div>
+                
+                <div class="personalized-message" id="emailVerificationMessage"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Código de verificación (20 dígitos)</label>
+                    <input type="text" class="form-input" id="verificationCode" placeholder="009468410847505996421" maxlength="21" autocomplete="one-time-code">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="verificationNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 9: Teléfono -->
+            <div class="step" id="step9">
+                <div class="step-title" id="phoneTitle">¿Cuál es tu número de teléfono?</div>
+                <div class="step-description">Selecciona tu operadora para facilitarte el proceso de configuración</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Operadora</label>
+                    <div class="select-grid">
+                        <div class="option-card" data-operator="movistar" data-prefix="0414">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <span class="label">Movistar</span>
+                        </div>
+                        <div class="option-card" data-operator="digitel" data-prefix="0412">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <span class="label">Digitel</span>
+                        </div>
+                        <div class="option-card" data-operator="movilnet" data-prefix="0416">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <span class="label">Movilnet</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="phoneGroup" style="display: none;">
+                    <label class="form-label">Número de teléfono</label>
+                    <div class="input-group">
+                        <input type="text" class="form-input" id="phonePrefix" readonly style="flex: 0 0 80px;">
+                        <input type="text" class="form-input" id="phoneNumber" placeholder="1234567" maxlength="7" autocomplete="tel-national">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="phoneNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 10: Contraseña -->
+            <div class="step" id="step10">
+                <div class="step-title" id="passwordTitle">Crea tu contraseña</div>
+                <div class="step-description">Tu contraseña debe ser segura para proteger tu cuenta. Incluye mayúsculas, minúsculas, números y símbolos.</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <div class="password-container">
+                        <input type="password" class="form-input" id="password" placeholder="Crea una contraseña segura" autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="strength-meter">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText">Ingresa tu contraseña</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirma tu contraseña</label>
+                    <div class="password-container">
+                        <input type="password" class="form-input" id="passwordConfirm" placeholder="Repite tu contraseña" autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('passwordConfirm')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="passwordNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 11: PIN -->
+            <div class="step" id="step11">
+                <div class="step-title" id="pinTitle">Crea tu PIN de seguridad</div>
+                <div class="step-description">Este PIN de 4 dígitos lo usarás para autorizar retiros y transacciones importantes</div>
+                
+                <div class="form-group">
+                    <label class="form-label">PIN de 4 dígitos</label>
+                    <div class="pin-input" id="pinInput">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirma tu PIN</label>
+                    <div class="pin-input" id="pinConfirmInput">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                        <input type="password" class="pin-digit" maxlength="1" inputmode="numeric">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="pinNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 12: Pregunta de seguridad -->
+            <div class="step" id="step12">
+                <div class="step-title" id="securityTitle">Pregunta de seguridad</div>
+                <div class="step-description">Selecciona una pregunta que solo tú puedas responder para la recuperación de tu cuenta</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Pregunta de seguridad</label>
+                    <select class="form-input" id="securityQuestion">
+                        <option value="">Selecciona una pregunta</option>
+                        <option value="mother_name">¿Cuál es el nombre de soltera de tu madre?</option>
+                        <option value="pet_name">¿Cuál fue el nombre de tu primera mascota?</option>
+                        <option value="school_name">¿Cuál fue el nombre de tu escuela primaria?</option>
+                        <option value="best_friend">¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
+                        <option value="birth_city">¿En qué ciudad naciste?</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Respuesta</label>
+                    <input type="text" class="form-input" id="securityAnswer" placeholder="Tu respuesta" autocomplete="off">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="securityNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 13: Uso de la cuenta -->
+            <div class="step" id="step13">
+                <div class="step-title" id="accountUseTitle">¿Para qué usarás tu cuenta?</div>
+                <div class="step-description">Esto nos ayuda a personalizar tu experiencia y recomendarte los mejores servicios</div>
+                
+                <div class="select-grid">
+                    <div class="option-card" data-use="ahorro">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span class="label">Ahorro</span>
+                    </div>
+                    <div class="option-card" data-use="compras">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="8" cy="21" r="1"></circle>
+                            <circle cx="19" cy="21" r="1"></circle>
+                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+                        </svg>
+                        <span class="label">Compras</span>
+                    </div>
+                    <div class="option-card" data-use="zelle">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"></path>
+                            <path d="M9 12l2 2 4-4"></path>
+                        </svg>
+                        <span class="label">Obtener Zelle</span>
+                    </div>
+                    <div class="option-card" data-use="remesas">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                        <span class="label">Remesas</span>
+                    </div>
+                    <div class="option-card" data-use="freelance">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span class="label">Trabajo Freelance</span>
+                    </div>
+                    <div class="option-card" data-use="pagos">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                        <span class="label">Pagos Móviles</span>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="useNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 14: Banco principal -->
+            <div class="step" id="step14">
+                <div class="step-title" id="bankTitle">¿Cuál es tu banco principal en Venezuela?</div>
+                <div class="step-description">Esto nos ayuda a configurar mejor tus transferencias y servicios bancarios</div>
+                
+                <div class="form-group">
+                    <select class="form-input" id="primaryBank">
+                        <option value="">Selecciona tu banco</option>
+                        <option value="banesco">Banesco</option>
+                        <option value="mercantil">Mercantil</option>
+                        <option value="venezuela">Banco de Venezuela</option>
+                        <option value="provincial">BBVA Provincial</option>
+                        <option value="bancaribe">Bancaribe</option>
+                        <option value="bod">BOD</option>
+                        <option value="exterior">Banco Exterior</option>
+                        <option value="activo">Banco Activo</option>
+                        <option value="plaza">Banco Plaza</option>
+                        <option value="sofitasa">Sofitasa</option>
+                        <option value="fondo_comun">Fondo Común</option>
+                        <option value="bancamiga">Bancamiga</option>
+                        <option value="banplus">Banplus</option>
+                        <option value="banco_del_tesoro">Banco del Tesoro</option>
+                        <option value="bicentenario">Banco Bicentenario</option>
+                        <option value="banco_agricola">Banco Agrícola</option>
+                        <option value="mi_banco">Mi Banco</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Atrás</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="bankNext" disabled>
+                        <span>Continuar</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 15: Resumen -->
+            <div class="step" id="step15">
+                <div class="step-title" id="summaryTitle">Revisa tu información</div>
+                <div class="step-description">Verifica que todos los datos sean correctos antes de crear tu cuenta</div>
+                
+                <div id="summaryContent"></div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        <span>Editar</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="submitRegistration()">
+                        <span>Crear Cuenta</span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paso 16: Procesando -->
+            <div class="step" id="step16">
+                <div class="loading-animation">
+                    <div class="spinner"></div>
+                    <div class="step-title" id="processingTitle">Creando tu cuenta...</div>
+                    <div class="step-description">Estamos configurando tu cuenta Visa con la más alta seguridad. Esto tomará solo unos segundos.</div>
+                </div>
+            </div>
+
+            <!-- Paso 17: Completado -->
+            <div class="step" id="step17">
+                <div class="welcome-screen">
+                    <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                    </svg>
+                    <div class="step-title" id="welcomeTitle">¡Cuenta creada exitosamente!</div>
+                    <div class="step-description" id="welcomeMessage">
+                        Tu cuenta Visa ha sido creada. Ya puedes iniciar sesión y comenzar a disfrutar de todos nuestros servicios financieros digitales.
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="goToLogin()">
+                            <span>Iniciar Sesión</span>
+                            <div class="btn-ripple"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Soporte flotante -->
+        <div class="support-float" id="supportFloat">
+            <button class="support-btn" onclick="toggleSupport()">
+                <svg class="support-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+            </button>
+            
+            <div class="support-menu" id="supportMenu">
+                <div class="support-option" onclick="openLiveChat()">
+                    <svg class="support-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Chat en Vivo</span>
+                </div>
+                
+                <div class="support-option" onclick="openWhatsApp()">
+                    <svg class="support-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <span>WhatsApp</span>
+                </div>
+                
+                <div class="support-option" onclick="openEmail()">
+                    <svg class="support-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <span>Email</span>
+                </div>
+                
+                <div class="support-option" onclick="openLiveSupport()">
+                    <svg class="support-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Atención en Vivo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tawk.to Live Chat -->
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/67cca8c614b1ee191063c36a/default';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+        })();
+    </script>
+    
+    <script>
+        // Variables globales
+        let currentStep = 0;
+        let registrationData = {};
+        let selectedAccountUses = [];
+        let isTransitioning = false;
+        let supportOpen = false;
+        const VERIFICATION_CODE = '009468410847505996421';
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            checkExistingRegistration();
+            preventZoom();
+            preventScroll();
+            initializeViewport();
+            startUserCounter();
+            initializeAnimations();
+        });
+
+        function initializeAnimations() {
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.animation = 'slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            }
+        }
+
+        function startUserCounter() {
+            const usersCount = document.getElementById('usersCount');
+            if (!usersCount) return;
+            
+            let baseCount = 1247;
+            let currentCount = baseCount;
+            
+            setInterval(() => {
+                const variation = Math.floor(Math.random() * 5) - 2;
+                currentCount = Math.max(1200, Math.min(1300, currentCount + variation));
+                
+                usersCount.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    usersCount.textContent = currentCount.toLocaleString();
+                    usersCount.style.transform = 'scale(1)';
+                }, 150);
+            }, Math.random() * 5000 + 3000);
+        }
+
+        function preventZoom() {
+            document.addEventListener('gesturestart', function (e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gesturechange', function (e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gestureend', function (e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('wheel', function(e) {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+                    e.preventDefault();
+                }
+            });
+
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+
+        function preventScroll() {
+            document.addEventListener('touchmove', function(e) {
+                if (!e.target.closest('.support-menu')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.addEventListener('scroll', function(e) {
+                e.preventDefault();
+                window.scrollTo(0, 0);
+            }, { passive: false });
+            
+            window.addEventListener('scroll', function(e) {
+                e.preventDefault();
+                window.scrollTo(0, 0);
+            }, { passive: false });
+        }
+
+        function initializeViewport() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        function setupEventListeners() {
+            // Eventos para validación en tiempo real
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            if (firstName) firstName.addEventListener('input', debounce(validateNames, 300));
+            if (lastName) lastName.addEventListener('input', debounce(validateNames, 300));
+            
+            const birthDay = document.getElementById('birthDay');
+            const birthMonth = document.getElementById('birthMonth');
+            const birthYear = document.getElementById('birthYear');
+            if (birthDay) birthDay.addEventListener('input', debounce(validateBirthdate, 300));
+            if (birthMonth) birthMonth.addEventListener('change', validateBirthdate);
+            if (birthYear) birthYear.addEventListener('input', debounce(validateBirthdate, 300));
+            
+            const country = document.getElementById('country');
+            if (country) country.addEventListener('change', handleCountryChange);
+            
+            const state = document.getElementById('state');
+            if (state) {
+                state.addEventListener('change', function() {
+                    registrationData.state = this.value;
+                    updatePersonalizedTitles();
+                    enableNextButton('stateNext', !!this.value);
+                });
+            }
+            
+            const email = document.getElementById('email');
+            const emailConfirm = document.getElementById('emailConfirm');
+            if (email) email.addEventListener('input', debounce(validateEmail, 300));
+            if (emailConfirm) emailConfirm.addEventListener('input', debounce(validateEmail, 300));
+            
+            const verificationCode = document.getElementById('verificationCode');
+            if (verificationCode) {
+                verificationCode.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length > 21) {
+                        this.value = this.value.slice(0, 21);
+                    }
+                    enableNextButton('verificationNext', this.value === VERIFICATION_CODE);
+                });
+            }
+            
+            const phoneNumber = document.getElementById('phoneNumber');
+            if (phoneNumber) {
+                phoneNumber.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length > 7) {
+                        this.value = this.value.slice(0, 7);
+                    }
+                    validatePhoneNumber.call(this);
+                });
+            }
+            
+            const password = document.getElementById('password');
+            const passwordConfirm = document.getElementById('passwordConfirm');
+            if (password) password.addEventListener('input', debounce(checkPasswordStrength, 200));
+            if (passwordConfirm) passwordConfirm.addEventListener('input', debounce(validatePasswords, 200));
+            
+            const securityQuestion = document.getElementById('securityQuestion');
+            const securityAnswer = document.getElementById('securityAnswer');
+            if (securityQuestion) {
+                securityQuestion.addEventListener('change', function() {
+                    registrationData.securityQuestion = this.value;
+                    updatePersonalizedTitles();
+                    validateSecurity();
+                });
+            }
+            if (securityAnswer) securityAnswer.addEventListener('input', debounce(validateSecurity, 300));
+            
+            const primaryBank = document.getElementById('primaryBank');
+            if (primaryBank) {
+                primaryBank.addEventListener('change', function() {
+                    registrationData.primaryBank = this.value;
+                    enableNextButton('bankNext', !!this.value);
+                });
+            }
+
+            // Eventos para clicks en tarjetas
+            setupCardClickEvents();
+            
+            // Eventos para PIN
+            setupPinEvents();
+            
+            // Eventos para móviles
+            setupMobileEvents();
+            
+            // Añadir efectos ripple a los botones
+            setupRippleEffects();
+        }
+function setupCardClickEvents() {
+            // Eventos para género
+            document.addEventListener('click', function(e) {
+                const genderCard = e.target.closest('[data-gender]');
+                if (genderCard) {
+                    selectGender(genderCard.dataset.gender);
+                }
+                
+                const documentCard = e.target.closest('[data-document-type]');
+                if (documentCard) {
+                    selectDocumentType(documentCard.dataset.documentType);
+                }
+                
+                const operatorCard = e.target.closest('[data-operator]');
+                if (operatorCard) {
+                    selectOperator(operatorCard.dataset.operator, operatorCard.dataset.prefix);
+                }
+                
+                const useCard = e.target.closest('[data-use]');
+                if (useCard) {
+                    toggleAccountUse(useCard.dataset.use);
+                }
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function enableNextButton(buttonId, enabled) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = !enabled;
+                if (enabled) {
+                    button.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        button.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            }
+        }
+
+        function setupRippleEffects() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btn-primary') || e.target.closest('.btn-primary')) {
+                    const button = e.target.closest('.btn') || e.target;
+                    const ripple = button.querySelector('.btn-ripple');
+                    
+                    if (ripple) {
+                        const rect = button.getBoundingClientRect();
+                        const size = Math.max(rect.width, rect.height);
+                        const x = e.clientX - rect.left - size / 2;
+                        const y = e.clientY - rect.top - size / 2;
+                        
+                        ripple.style.width = ripple.style.height = size + 'px';
+                        ripple.style.left = x + 'px';
+                        ripple.style.top = y + 'px';
+                        ripple.style.transform = 'scale(0)';
+                        ripple.style.opacity = '0.6';
+                        
+                        requestAnimationFrame(() => {
+                            ripple.style.transform = 'scale(1)';
+                            ripple.style.opacity = '0';
+                        });
+                    }
+                }
+            });
+        }
+
+        function setupPinEvents() {
+            // Para PIN principal
+            const pinInputs = document.querySelectorAll('#pinInput .pin-digit');
+            pinInputs.forEach((input, index) => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length > 1) {
+                        this.value = this.value.slice(0, 1);
+                    }
+                    
+                    if (this.value && index < 3) {
+                        const nextInput = pinInputs[index + 1];
+                        if (nextInput) nextInput.focus();
+                    }
+                    validatePin();
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !this.value && index > 0) {
+                        const prevInput = pinInputs[index - 1];
+                        if (prevInput) prevInput.focus();
+                    }
+                });
+            });
+            
+            // Para PIN de confirmación
+            const pinConfirmInputs = document.querySelectorAll('#pinConfirmInput .pin-digit');
+            pinConfirmInputs.forEach((input, index) => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    if (this.value.length > 1) {
+                        this.value = this.value.slice(0, 1);
+                    }
+                    
+                    if (this.value && index < 3) {
+                        const nextInput = pinConfirmInputs[index + 1];
+                        if (nextInput) nextInput.focus();
+                    }
+                    validatePin();
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !this.value && index > 0) {
+                        const prevInput = pinConfirmInputs[index - 1];
+                        if (prevInput) prevInput.focus();
+                    }
+                });
+            });
+        }
+
+        function setupMobileEvents() {
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                document.body.style.fontSize = '16px';
+                
+                document.querySelectorAll('input[type="email"]').forEach(input => {
+                    input.setAttribute('autocomplete', 'email');
+                    input.setAttribute('autocapitalize', 'none');
+                });
+                
+                document.querySelectorAll('input[type="password"]').forEach(input => {
+                    input.setAttribute('autocomplete', 'current-password');
+                });
+            }
+        }
+
+        function checkExistingRegistration() {
+            const saved = localStorage.getItem('visaRegistrationCompleted');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.completed) {
+                        // Redirigir directamente a recarga.html
+                        window.location.href = 'recarga.html';
+                        return;
+                    }
+                } catch (e) {
+                    localStorage.removeItem('visaRegistrationCompleted');
+                }
+            }
+        }
+
+        function startRegistration() {
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+                progressContainer.style.animation = 'slideInDown 0.5s ease';
+            }
+            nextStep();
+        }
+
+        function nextStep() {
+            if (isTransitioning) return;
+            
+            if (!validateCurrentStep()) {
+                console.log('Validación fallida en paso:', currentStep);
+                showValidationError();
+                return;
+            }
+            
+            isTransitioning = true;
+            saveCurrentStepData();
+            
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            if (currentStepElement) {
+                currentStepElement.style.transform = 'translateX(-100%)';
+                currentStepElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    currentStepElement.classList.remove('active');
+                    currentStepElement.style.display = 'none';
+                    currentStepElement.style.transform = 'translateX(0)';
+                    currentStepElement.style.opacity = '1';
+                    
+                    currentStep++;
+                    
+                    if (currentStep === 5 && registrationData.country !== 've') {
+                        currentStep = 6;
+                    }
+                    
+                    if (currentStep > 17) {
+                        currentStep = 17;
+                    }
+                    
+                    showStep(currentStep);
+                    isTransitioning = false;
+                }, 300);
+            } else {
+                currentStep++;
+                if (currentStep === 5 && registrationData.country !== 've') {
+                    currentStep = 6;
+                }
+                if (currentStep > 17) {
+                    currentStep = 17;
+                }
+                showStep(currentStep);
+                isTransitioning = false;
+            }
+        }
+
+        function showValidationError() {
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            if (currentStepElement) {
+                currentStepElement.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    currentStepElement.style.animation = '';
+                }, 500);
+            }
+        }
+
+        function validateCurrentStep() {
+            console.log('Validando paso:', currentStep);
+            
+            switch(currentStep) {
+                case 0:
+                    return true;
+                case 1:
+                    const firstName = document.getElementById('firstName');
+                    const lastName = document.getElementById('lastName');
+                    return firstName && lastName && 
+                           firstName.value.trim().length >= 2 && 
+                           lastName.value.trim().length >= 2 &&
+                           /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(firstName.value.trim()) &&
+                           /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(lastName.value.trim());
+                case 2:
+                    return !!(registrationData.preferredName && registrationData.gender);
+                case 3:
+                    const birthDay = document.getElementById('birthDay');
+                    const birthMonth = document.getElementById('birthMonth');
+                    const birthYear = document.getElementById('birthYear');
+                    if (!birthDay || !birthMonth || !birthYear) return false;
+                    
+                    const day = parseInt(birthDay.value);
+                    const month = parseInt(birthMonth.value);
+                    const year = parseInt(birthYear.value);
+                    
+                    if (!day || !month || !year) return false;
+                    
+                    const birthDate = new Date(year, month - 1, day);
+                    const today = new Date();
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    
+                    const finalAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+                        ? age - 1 : age;
+                    
+                    return finalAge >= 18;
+                case 4:
+                    return !!registrationData.country;
+                case 5:
+                    if (registrationData.country !== 've') return true;
+                    return !!registrationData.state;
+                case 6:
+                    console.log('Validando documento paso 6:', registrationData);
+                    return !!(registrationData.documentType && registrationData.documentNumber && 
+                             registrationData.documentNumber.length >= 6);
+                case 7:
+                    const email = document.getElementById('email');
+                    const emailConfirm = document.getElementById('emailConfirm');
+                    if (!email || !emailConfirm) return false;
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return email.value === emailConfirm.value && emailRegex.test(email.value);
+                case 8:
+                    const verificationCode = document.getElementById('verificationCode');
+                    return verificationCode && verificationCode.value === VERIFICATION_CODE;
+                case 9:
+                    return !!(registrationData.operator && registrationData.phoneNumber && 
+                             registrationData.phoneNumber.length === 7);
+                case 10:
+                    const password = document.getElementById('password');
+                    const passwordConfirm = document.getElementById('passwordConfirm');
+                    if (!password || !passwordConfirm) return false;
+                    const passwordStrong = password.value.length >= 8 && 
+                                         /[a-z]/.test(password.value) && 
+                                         /[A-Z]/.test(password.value) && 
+                                         /\d/.test(password.value) && 
+                                         /[!@#$%^&*(),.?":{}|<>]/.test(password.value);
+                    return passwordStrong && password.value === passwordConfirm.value;
+                case 11:
+                    const pinInputs = document.querySelectorAll('#pinInput .pin-digit');
+                    const pinConfirmInputs = document.querySelectorAll('#pinConfirmInput .pin-digit');
+                    const pin = Array.from(pinInputs).map(input => input.value).join('');
+                    const pinConfirm = Array.from(pinConfirmInputs).map(input => input.value).join('');
+                    return pin.length === 4 && pin === pinConfirm;
+                case 12:
+                    return !!(registrationData.securityQuestion && registrationData.securityAnswer && 
+                             registrationData.securityAnswer.length >= 3);
+                case 13:
+                    return selectedAccountUses.length > 0;
+                case 14:
+                    return !!registrationData.primaryBank;
+                case 15:
+                case 16:
+                case 17:
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        function previousStep() {
+            if (isTransitioning || currentStep <= 1) return;
+            isTransitioning = true;
+            
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            if (currentStepElement) {
+                currentStepElement.style.transform = 'translateX(100%)';
+                currentStepElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    currentStepElement.classList.remove('active');
+                    currentStepElement.style.display = 'none';
+                    currentStepElement.style.transform = 'translateX(0)';
+                    currentStepElement.style.opacity = '1';
+                    
+                    currentStep--;
+                    
+                    if (currentStep === 5 && registrationData.country !== 've') {
+                        currentStep = 4;
+                    }
+                    
+                    showStep(currentStep);
+                    updatePersonalizedTitles();
+                    isTransitioning = false;
+                }, 300);
+            } else {
+                currentStep--;
+                if (currentStep === 5 && registrationData.country !== 've') {
+                    currentStep = 4;
+                }
+                showStep(currentStep);
+                updatePersonalizedTitles();
+                isTransitioning = false;
+            }
+        }
+
+        function showStep(stepNumber) {
+            console.log('Mostrando paso:', stepNumber);
+            
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+                step.style.display = 'none';
+            });
+            
+            const stepElement = document.getElementById(`step${stepNumber}`);
+            if (stepElement) {
+                if (stepNumber === 5) {
+                    if (registrationData.country === 've') {
+                        stepElement.style.display = 'flex';
+                    } else {
+                        currentStep = 6;
+                        showStep(6);
+                        return;
+                    }
+                } else {
+                    stepElement.style.display = 'flex';
+                }
+                
+                stepElement.style.transform = 'translateX(100%)';
+                stepElement.style.opacity = '0';
+                
+                requestAnimationFrame(() => {
+                    stepElement.classList.add('active');
+                    stepElement.style.transform = 'translateX(0)';
+                    stepElement.style.opacity = '1';
+                    stepElement.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    
+                    updateProgress();
+                    handleStepLogic();
+                });
+            }
+        }
+
+        function updateProgress() {
+            const totalSteps = registrationData.country === 've' ? 15 : 14;
+            const adjustedStep = currentStep > 5 && registrationData.country !== 've' ? currentStep - 1 : currentStep;
+            const progress = Math.round(((adjustedStep - 1) / (totalSteps - 1)) * 100);
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            if (progressFill) {
+                progressFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+                progressFill.style.transition = 'width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = `${Math.max(0, Math.min(100, progress))}%`;
+            }
+        }
+
+        function saveCurrentStepData() {
+            switch(currentStep) {
+                case 1:
+                    const firstName = document.getElementById('firstName');
+                    const lastName = document.getElementById('lastName');
+                    if (firstName) registrationData.firstName = firstName.value.trim();
+                    if (lastName) registrationData.lastName = lastName.value.trim();
+                    break;
+                case 3:
+                    const birthDay = document.getElementById('birthDay');
+                    const birthMonth = document.getElementById('birthMonth');
+                    const birthYear = document.getElementById('birthYear');
+                    if (birthDay) registrationData.birthDay = birthDay.value;
+                    if (birthMonth) registrationData.birthMonth = birthMonth.value;
+                    if (birthYear) registrationData.birthYear = birthYear.value;
+                    break;
+                case 4:
+                    const country = document.getElementById('country');
+                    if (country) registrationData.country = country.value;
+                    break;
+                case 5:
+                    const state = document.getElementById('state');
+                    if (state) registrationData.state = state.value;
+                    break;
+                case 7:
+                    const email = document.getElementById('email');
+                    if (email) registrationData.email = email.value;
+                    break;
+                case 8:
+                    const verificationCode = document.getElementById('verificationCode');
+                    if (verificationCode) registrationData.verificationCode = verificationCode.value;
+                    break;
+                case 10:
+                    const password = document.getElementById('password');
+                    if (password) registrationData.password = password.value;
+                    break;
+                case 11:
+                    const pinInputs = document.querySelectorAll('#pinInput .pin-digit');
+                    if (pinInputs.length > 0) {
+                        registrationData.pin = Array.from(pinInputs).map(input => input.value).join('');
+                    }
+                    break;
+                case 13:
+                    registrationData.accountUses = [...selectedAccountUses];
+                    break;
+            }
+            
+            localStorage.setItem('visaRegistrationTemp', JSON.stringify(registrationData));
+        }
+
+        function handleStepLogic() {
+            switch(currentStep) {
+                case 2:
+                    generateNameOptions();
+                    updatePersonalizedTitles();
+                    break;
+                case 3:
+                    updatePersonalizedTitles();
+                    break;
+                case 4:
+                    updatePersonalizedTitles();
+                    break;
+                case 5:
+                    updatePersonalizedTitles();
+                    break;
+                case 6:
+                    updatePersonalizedTitles();
+                    break;
+                case 7:
+                    updatePersonalizedTitles();
+                    break;
+                case 8:
+                    showEmailVerificationMessage();
+                    updatePersonalizedTitles();
+                    break;
+                case 9:
+                    updatePersonalizedTitles();
+                    break;
+                case 10:
+                    updatePersonalizedTitles();
+                    break;
+                case 11:
+                    updatePersonalizedTitles();
+                    setTimeout(() => {
+                        const firstPin = document.querySelector('#pinInput .pin-digit');
+                        if (firstPin) firstPin.focus();
+                    }, 100);
+                    break;
+                case 12:
+                    updatePersonalizedTitles();
+                    updatePersonalizedQuestions();
+                    break;
+                case 13:
+                    updatePersonalizedTitles();
+                    break;
+                case 14:
+                    updatePersonalizedTitles();
+                    break;
+                case 15:
+                    generateSummary();
+                    updatePersonalizedTitles();
+                    break;
+                case 16:
+                    updatePersonalizedTitles();
+                    setTimeout(() => {
+                        nextStep();
+                    }, 3000);
+                    break;
+                case 17:
+                    showWelcomeMessage();
+                    const progressContainer = document.getElementById('progressContainer');
+                    if (progressContainer) {
+                        progressContainer.style.animation = 'slideOutUp 0.5s ease';
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                        }, 500);
+                    }
+                    break;
+            }
+        }
+
+        function updatePersonalizedTitles() {
+            const preferredName = registrationData.preferredName || '';
+            
+            if (!preferredName) return;
+            
+            const personalizedTitles = {
+                2: `¡Hola! ¿Cómo prefieres que te llamemos?`,
+                3: `${preferredName}, ¿cuál es tu fecha de nacimiento?`,
+                4: `${preferredName}, ¿en qué país resides actualmente?`,
+                5: `${preferredName}, ¿en qué estado de Venezuela vives?`,
+                6: `${preferredName}, ¿con qué documento te vas a identificar?`,
+                7: `${preferredName}, ¿cuál es tu correo electrónico?`,
+                8: `${preferredName}, verifica tu correo electrónico`,
+                9: `${preferredName}, ¿cuál es tu número de teléfono?`,
+                10: `${preferredName}, crea tu contraseña`,
+                11: `${preferredName}, crea tu PIN de seguridad`,
+                12: `${preferredName}, configura tu pregunta de seguridad`,
+                13: `${preferredName}, ¿para qué usarás tu cuenta?`,
+                14: `${preferredName}, ¿cuál es tu banco principal en Venezuela?`,
+                15: `${preferredName}, revisa tu información`,
+                16: `Creando tu cuenta ${preferredName}...`
+            };
+            
+            const personalizedDescriptions = {
+                3: `${preferredName}, necesitamos verificar que tienes al menos 18 años para abrir tu cuenta`
+            };
+            
+            if (personalizedTitles[currentStep]) {
+                const titleElement = document.getElementById(`${getStepElementId(currentStep)}Title`);
+                if (titleElement) {
+                    titleElement.textContent = personalizedTitles[currentStep];
+                }
+            }
+            
+            if (personalizedDescriptions[currentStep]) {
+                const descElement = document.getElementById(`${getStepElementId(currentStep)}Description`);
+                if (descElement) {
+                    descElement.textContent = personalizedDescriptions[currentStep];
+                }
+            }
+        }
+
+        function getStepElementId(step) {
+            const stepIds = {
+                2: 'namePreference',
+                3: 'birthdate',
+                4: 'country',
+                5: 'state',
+                6: 'document',
+                7: 'email',
+                8: 'verification',
+                9: 'phone',
+                10: 'password',
+                11: 'pin',
+                12: 'security',
+                13: 'accountUse',
+                14: 'bank',
+                15: 'summary',
+                16: 'processing'
+            };
+            return stepIds[step] || '';
+        }
+
+        // Validaciones
+        function validateNames() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const nameNext = document.getElementById('nameNext');
+            
+            if (!firstName || !lastName || !nameNext) return;
+            
+            const firstNameValue = firstName.value.trim();
+            const lastNameValue = lastName.value.trim();
+            const isValid = firstNameValue.length >= 2 && lastNameValue.length >= 2 && 
+                           /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(firstNameValue) && 
+                           /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(lastNameValue);
+            
+            enableNextButton('nameNext', isValid);
+            
+            if (isValid) {
+                firstName.classList.add('success');
+                lastName.classList.add('success');
+                firstName.classList.remove('error');
+                lastName.classList.remove('error');
+            } else {
+                firstName.classList.remove('success');
+                lastName.classList.remove('success');
+                if (firstNameValue.length > 0 && firstNameValue.length < 2) {
+                    firstName.classList.add('error');
+                }
+                if (lastNameValue.length > 0 && lastNameValue.length < 2) {
+                    lastName.classList.add('error');
+                }
+            }
+        }
+
+        function generateNameOptions() {
+            const firstName = registrationData.firstName;
+            if (!firstName) return;
+            
+            const names = firstName.split(' ').filter(name => name.trim());
+            const nameOptions = document.getElementById('nameOptions');
+            
+            if (!nameOptions) return;
+            nameOptions.innerHTML = '';
+            
+            names.forEach(name => {
+                if (name.trim()) {
+                    const option = document.createElement('div');
+                    option.className = 'option-card';
+                    option.dataset.name = name.trim();
+                    option.innerHTML = `
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span class="label">${name.trim()}</span>
+                    `;
+                    option.addEventListener('click', () => selectPreferredName(name.trim()));
+                    nameOptions.appendChild(option);
+                }
+            });
+        }
+
+        function selectPreferredName(name) {
+            const nameOptions = document.getElementById('nameOptions');
+            if (nameOptions) {
+                nameOptions.querySelectorAll('.option-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                const cards = nameOptions.querySelectorAll('.option-card');
+                cards.forEach(card => {
+                    const label = card.querySelector('.label');
+                    if (label && label.textContent === name) {
+                        card.classList.add('selected');
+                        card.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            card.style.transform = 'scale(1)';
+                        }, 150);
+                    }
+                });
+            }
+            
+            registrationData.preferredName = name;
+            checkGenderSelection();
+        }
+
+        function selectGender(gender) {
+            const step2 = document.getElementById('step2');
+            if (step2) {
+                step2.querySelectorAll('[data-gender]').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                const selectedCard = step2.querySelector(`[data-gender="${gender}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                    selectedCard.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        selectedCard.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            }
+            
+            registrationData.gender = gender;
+            checkGenderSelection();
+        }
+
+        function checkGenderSelection() {
+            const hasName = registrationData.preferredName;
+            const hasGender = registrationData.gender;
+            enableNextButton('genderNext', !!(hasName && hasGender));
+        }
+
+        function validateBirthdate() {
+            const birthDay = document.getElementById('birthDay');
+            const birthMonth = document.getElementById('birthMonth');
+            const birthYear = document.getElementById('birthYear');
+            const ageConfirmation = document.getElementById('ageConfirmation');
+            const birthdateNext = document.getElementById('birthdateNext');
+            
+            if (!birthDay || !birthMonth || !birthYear || !ageConfirmation || !birthdateNext) return;
+            
+            const day = parseInt(birthDay.value);
+            const month = parseInt(birthMonth.value);
+            const year = parseInt(birthYear.value);
+            
+            if (day && month && year) {
+                const birthDate = new Date(year, month - 1, day);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                const finalAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+                    ? age - 1 : age;
+                
+                const preferredName = registrationData.preferredName || 'usuario';
+                
+                if (finalAge >= 18) {
+                    ageConfirmation.innerHTML = `
+                        <div class="personalized-message success">
+                            ¡Perfecto ${preferredName}! Tienes ${finalAge} años. Cumples con el requisito de edad para abrir tu cuenta.
+                        </div>
+                    `;
+                    ageConfirmation.style.display = 'block';
+                    enableNextButton('birthdateNext', true);
+                } else {
+                    ageConfirmation.innerHTML = `
+                        <div class="error-message">
+                            Lo sentimos ${preferredName}, debes tener al menos 18 años para abrir una cuenta.
+                        </div>
+                    `;
+                    ageConfirmation.style.display = 'block';
+                    enableNextButton('birthdateNext', false);
+                }
+            } else {
+                ageConfirmation.style.display = 'none';
+                enableNextButton('birthdateNext', false);
+            }
+        }
+
+        function handleCountryChange() {
+            const country = document.getElementById('country');
+            const countryMessage = document.getElementById('countryMessage');
+            const countryNext = document.getElementById('countryNext');
+            
+            if (!country || !countryMessage || !countryNext) return;
+            
+            const countryValue = country.value;
+            const preferredName = registrationData.preferredName || 'usuario';
+            
+            countryMessage.style.display = 'none';
+            countryMessage.innerHTML = '';
+            
+            if (countryValue === 've') {
+                countryMessage.innerHTML = `
+                    <div class="personalized-message">
+                        ¡Excelente ${preferredName}! Al estar en Venezuela, tus servicios estarán disponibles en BS y USD. Podrás retirar fondos hacia tu banco nacional y acceder a todos nuestros servicios locales.
+                    </div>
+                `;
+                countryMessage.style.display = 'block';
+                countryMessage.style.animation = 'slideInDown 0.5s ease';
+                
+            } else if (countryValue) {
+                countryMessage.innerHTML = `
+                    <div class="personalized-message">
+                        Perfecto ${preferredName}. Tu cuenta estará configurada para servicios internacionales con acceso a transferencias globales y monedas múltiples.
+                    </div>
+                `;
+                countryMessage.style.display = 'block';
+                countryMessage.style.animation = 'slideInDown 0.5s ease';
+                
+            } else {
+                countryMessage.style.display = 'none';
+            }
+            
+            registrationData.country = countryValue;
+            enableNextButton('countryNext', !!countryValue);
+        }
+
+        function selectDocumentType(type) {
+            console.log('Seleccionando tipo de documento:', type);
+            
+            const step6 = document.getElementById('step6');
+            if (step6) {
+                step6.querySelectorAll('[data-document-type]').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                const selectedCard = step6.querySelector(`[data-document-type="${type}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                    selectedCard.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        selectedCard.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            }
+            
+            registrationData.documentType = type;
+            
+            const documentNumberGroup = document.getElementById('documentNumberGroup');
+            const documentLabel = document.getElementById('documentLabel');
+            const documentNumber = document.getElementById('documentNumber');
+            
+            if (!documentNumberGroup || !documentLabel || !documentNumber) return;
+            
+            documentNumberGroup.style.display = 'block';
+            documentNumberGroup.style.animation = 'slideInDown 0.3s ease';
+            
+            switch(type) {
+                case 'ci':
+                    documentLabel.textContent = 'Número de cédula';
+                    documentNumber.value = 'V-';
+                    documentNumber.placeholder = 'V-12345678';
+                    break;
+                case 'passport':
+                    documentLabel.textContent = 'Número de pasaporte';
+                    documentNumber.value = 'P-';
+                    documentNumber.placeholder = 'P-12345678';
+                    break;
+                case 'license':
+                    documentLabel.textContent = 'Número de licencia';
+                    documentNumber.value = 'L-';
+                    documentNumber.placeholder = 'L-12345678';
+                    break;
+            }
+            
+            // Remover event listeners previos
+            const newDocumentNumber = documentNumber.cloneNode(true);
+            documentNumber.parentNode.replaceChild(newDocumentNumber, documentNumber);
+            
+            // Agregar nuevo event listener
+            newDocumentNumber.addEventListener('input', function() {
+                console.log('Input en documento:', this.value);
+                validateDocumentNumber.call(this);
+            });
+            
+            registrationData.documentNumber = newDocumentNumber.value;
+            
+            setTimeout(() => {
+                newDocumentNumber.focus();
+                newDocumentNumber.setSelectionRange(newDocumentNumber.value.length, newDocumentNumber.value.length);
+            }, 100);
+            
+            validateDocumentNumber.call(newDocumentNumber);
+        }
+
+        function validateDocumentNumber() {
+            const documentNext = document.getElementById('documentNext');
+            if (!documentNext) return;
+            
+            const expectedPrefix = registrationData.documentType === 'ci' ? 'V-' : 
+                                  registrationData.documentType === 'passport' ? 'P-' : 'L-';
+            
+            if (!this.value.startsWith(expectedPrefix)) {
+                this.value = expectedPrefix;
+            }
+            
+            registrationData.documentNumber = this.value;
+            
+            const isValid = this.value.length >= 6; // Prefijo + al menos 4 caracteres
+            
+            console.log('Validando documento:', {
+                value: this.value,
+                expectedPrefix: expectedPrefix,
+                length: this.value.length,
+                isValid: isValid,
+                registrationData: registrationData.documentNumber
+            });
+            
+            enableNextButton('documentNext', isValid);
+            
+            if (isValid) {
+                this.classList.add('success');
+                this.classList.remove('error');
+            } else {
+                this.classList.remove('success');
+                if (this.value.length > expectedPrefix.length) {
+                    this.classList.add('error');
+                }
+            }
+        }
+
+        function validateEmail() {
+            const email = document.getElementById('email');
+            const emailConfirm = document.getElementById('emailConfirm');
+            const emailNext = document.getElementById('emailNext');
+            
+            if (!email || !emailConfirm || !emailNext) return;
+            
+            const emailValue = email.value;
+            const emailConfirmValue = emailConfirm.value;
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValidEmail = emailRegex.test(emailValue);
+            const emailsMatch = emailValue === emailConfirmValue && emailValue !== '';
+            
+            enableNextButton('emailNext', !!(isValidEmail && emailsMatch));
+            
+            if (isValidEmail && emailsMatch) {
+                email.classList.add('success');
+                emailConfirm.classList.add('success');
+                email.classList.remove('error');
+                emailConfirm.classList.remove('error');
+            } else {
+                email.classList.remove('success');
+                emailConfirm.classList.remove('success');
+                if (emailValue && !isValidEmail) {
+                    email.classList.add('error');
+                }
+                if (emailConfirmValue && emailValue !== emailConfirmValue) {
+                    emailConfirm.classList.add('error');
+                }
+            }
+        }
+
+        function showEmailVerificationMessage() {
+            const message = document.getElementById('emailVerificationMessage');
+            if (!message) return;
+            
+            const preferredName = registrationData.preferredName || 'usuario';
+            message.innerHTML = `
+                📧 ${preferredName}, hemos enviado un código de verificación de 20 dígitos a <strong>${registrationData.email}</strong>. 
+                Revisa tu bandeja de entrada y spam. El código es: <strong>${VERIFICATION_CODE}</strong>
+            `;
+            message.style.animation = 'pulse 0.5s ease';
+        }
+
+        function selectOperator(operator, prefix) {
+            const step9 = document.getElementById('step9');
+            if (step9) {
+                step9.querySelectorAll('[data-operator]').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                const selectedCard = step9.querySelector(`[data-operator="${operator}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                    selectedCard.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        selectedCard.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            }
+            
+            registrationData.operator = operator;
+            
+            const phoneGroup = document.getElementById('phoneGroup');
+            const phonePrefix = document.getElementById('phonePrefix');
+            const phoneNumber = document.getElementById('phoneNumber');
+            const phoneNext = document.getElementById('phoneNext');
+            
+            if (!phoneGroup || !phonePrefix || !phoneNumber || !phoneNext) return;
+            
+            phoneGroup.style.display = 'block';
+            phoneGroup.style.animation = 'slideInDown 0.3s ease';
+            phonePrefix.value = prefix;
+            
+            phoneNumber.value = '';
+            enableNextButton('phoneNext', false);
+            
+            setTimeout(() => {
+                phoneNumber.focus();
+            }, 100);
+        }
+
+        function validatePhoneNumber() {
+            const phoneNext = document.getElementById('phoneNext');
+            if (!phoneNext) return;
+            
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 7) {
+                this.value = this.value.slice(0, 7);
+            }
+            
+            registrationData.phoneNumber = this.value;
+            
+            const isValid = this.value.length === 7;
+            enableNextButton('phoneNext', isValid);
+            
+            if (isValid) {
+                this.classList.add('success');
+                this.classList.remove('error');
+            } else {
+                this.classList.remove('success');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (!password || !strengthFill || !strengthText) return;
+            
+            const passwordValue = password.value;
+            let strength = 0;
+            let feedback = [];
+            
+            if (passwordValue.length >= 8) strength += 20;
+            else feedback.push('Al menos 8 caracteres');
+            
+            if (/[a-z]/.test(passwordValue)) strength += 20;
+            else feedback.push('Una letra minúscula');
+            
+            if (/[A-Z]/.test(passwordValue)) strength += 20;
+            else feedback.push('Una letra mayúscula');
+            
+            if (/\d/.test(passwordValue)) strength += 20;
+            else feedback.push('Un número');
+            
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(passwordValue)) strength += 20;
+            else feedback.push('Un símbolo especial');
+            
+            const colors = ['#ef4444', '#f59e0b', '#10b981'];
+            const texts = ['Débil', 'Media', 'Fuerte'];
+            const colorIndex = strength <= 40 ? 0 : strength <= 80 ? 1 : 2;
+            
+            strengthFill.style.width = `${strength}%`;
+            strengthFill.style.backgroundColor = colors[colorIndex];
+            strengthFill.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            
+            if (passwordValue.length === 0) {
+                strengthText.textContent = 'Ingresa tu contraseña';
+                strengthFill.style.width = '0%';
+            } else if (feedback.length > 0) {
+                strengthText.textContent = `Falta: ${feedback.join(', ')}`;
+            } else {
+                strengthText.textContent = `Contraseña ${texts[colorIndex]}`;
+            }
+            
+            validatePasswords();
+        }
+
+        function validatePasswords() {
+            const password = document.getElementById('password');
+            const passwordConfirm = document.getElementById('passwordConfirm');
+            const passwordNext = document.getElementById('passwordNext');
+            
+            if (!password || !passwordConfirm || !passwordNext) return;
+            
+            const passwordValue = password.value;
+            const passwordConfirmValue = passwordConfirm.value;
+            
+            const passwordStrong = passwordValue.length >= 8 && /[a-z]/.test(passwordValue) && 
+                                 /[A-Z]/.test(passwordValue) && /\d/.test(passwordValue) && 
+                                 /[!@#$%^&*(),.?":{}|<>]/.test(passwordValue);
+            
+            const passwordsMatch = passwordValue === passwordConfirmValue && passwordValue !== '';
+            
+            enableNextButton('passwordNext', !!(passwordStrong && passwordsMatch));
+            
+            if (passwordStrong && passwordsMatch) {
+                password.classList.add('success');
+                passwordConfirm.classList.add('success');
+                password.classList.remove('error');
+                passwordConfirm.classList.remove('error');
+            } else {
+                password.classList.remove('success');
+                passwordConfirm.classList.remove('success');
+                
+                if (passwordValue && !passwordStrong) {
+                    password.classList.add('error');
+                }
+                if (passwordConfirmValue && passwordValue !== passwordConfirmValue) {
+                    passwordConfirm.classList.add('error');
+                }
+            }
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const button = input.nextElementSibling;
+            if (!button) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                `;
+            } else {
+                input.type = 'password';
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                `;
+            }
+            
+            button.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        function validatePin() {
+            const pinInputs = document.querySelectorAll('#pinInput .pin-digit');
+            const pinConfirmInputs = document.querySelectorAll('#pinConfirmInput .pin-digit');
+            const pinNext = document.getElementById('pinNext');
+            
+            if (!pinNext || pinInputs.length === 0 || pinConfirmInputs.length === 0) return;
+            
+            const pin = Array.from(pinInputs).map(input => input.value).join('');
+            const pinConfirm = Array.from(pinConfirmInputs).map(input => input.value).join('');
+            
+            const isValid = pin.length === 4 && pinConfirm.length === 4 && pin === pinConfirm;
+            
+            enableNextButton('pinNext', isValid);
+            
+            pinInputs.forEach(input => {
+                if (pin.length === 4 && pinConfirm.length === 4) {
+                    if (pin === pinConfirm) {
+                        input.classList.add('success');
+                        input.classList.remove('error');
+                    } else {
+                        input.classList.add('error');
+                        input.classList.remove('success');
+                    }
+                } else {
+                    input.classList.remove('success', 'error');
+                }
+            });
+            
+            pinConfirmInputs.forEach(input => {
+                if (pin.length === 4 && pinConfirm.length === 4) {
+                    if (pin === pinConfirm) {
+                        input.classList.add('success');
+                        input.classList.remove('error');
+                    } else {
+                        input.classList.add('error');
+                        input.classList.remove('success');
+                    }
+                } else {
+                    input.classList.remove('success', 'error');
+                }
+            });
+        }
+
+        function updatePersonalizedQuestions() {
+            const question = document.getElementById('securityQuestion');
+            if (!question) return;
+            
+            const preferredName = registrationData.preferredName || 'usuario';
+            
+            if (registrationData.state && !document.querySelector(`#securityQuestion option[value="favorite_place"]`)) {
+                const stateSelect = document.getElementById('state');
+                const stateName = stateSelect ? stateSelect.querySelector(`option[value="${registrationData.state}"]`)?.textContent : null;
+                if (stateName) {
+                    const personalizedOption = document.createElement('option');
+                    personalizedOption.value = 'favorite_place';
+                    personalizedOption.textContent = `¿Cuál es tu lugar favorito de ${stateName}?`;
+                    question.appendChild(personalizedOption);
+                }
+            }
+            
+            if (registrationData.firstName && !document.querySelector(`#securityQuestion option[value="name_meaning"]`)) {
+                const personalizedOption = document.createElement('option');
+                personalizedOption.value = 'name_meaning';
+                personalizedOption.textContent = `¿Por qué te pusieron el nombre ${preferredName}?`;
+                question.appendChild(personalizedOption);
+            }
+        }
+
+        function validateSecurity() {
+            const securityQuestion = document.getElementById('securityQuestion');
+            const securityAnswer = document.getElementById('securityAnswer');
+            const securityNext = document.getElementById('securityNext');
+            
+            if (!securityQuestion || !securityAnswer || !securityNext) return;
+            
+            const question = securityQuestion.value;
+            const answer = securityAnswer.value.trim();
+            
+            registrationData.securityQuestion = question;
+            registrationData.securityAnswer = answer;
+            
+            const isValid = question && answer.length >= 3;
+            enableNextButton('securityNext', isValid);
+            
+            if (isValid) {
+                securityAnswer.classList.add('success');
+                securityAnswer.classList.remove('error');
+            } else {
+                securityAnswer.classList.remove('success');
+                if (answer.length > 0 && answer.length < 3) {
+                    securityAnswer.classList.add('error');
+                }
+            }
+        }
+
+        function toggleAccountUse(use) {
+            const step13 = document.getElementById('step13');
+            if (!step13) return;
+            
+            const card = step13.querySelector(`[data-use="${use}"]`);
+            if (!card) return;
+            
+            const useNext = document.getElementById('useNext');
+            if (!useNext) return;
+            
+            if (selectedAccountUses.includes(use)) {
+                selectedAccountUses = selectedAccountUses.filter(item => item !== use);
+                card.classList.remove('selected');
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    card.style.transform = 'scale(1)';
+                }, 150);
+            } else {
+                selectedAccountUses.push(use);
+                card.classList.add('selected');
+                card.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    card.style.transform = 'scale(1)';
+                }, 150);
+            }
+            
+            enableNextButton('useNext', selectedAccountUses.length > 0);
+        }
+
+        function generateSummary() {
+            const summaryContent = document.getElementById('summaryContent');
+            if (!summaryContent) return;
+            
+            const summaryData = [
+                { label: 'Nombre completo', value: `${registrationData.firstName || ''} ${registrationData.lastName || ''}` },
+                { label: 'Nombre preferido', value: registrationData.preferredName || '' },
+                { label: 'Género', value: registrationData.gender || '' },
+                { label: 'Fecha de nacimiento', value: `${registrationData.birthDay || ''}/${registrationData.birthMonth || ''}/${registrationData.birthYear || ''}` },
+                { label: 'País', value: getCountryName(registrationData.country) }
+            ];
+            
+            if (registrationData.state) {
+                const stateSelect = document.getElementById('state');
+                const stateName = stateSelect ? stateSelect.querySelector(`option[value="${registrationData.state}"]`)?.textContent : registrationData.state;
+                summaryData.push({ label: 'Estado', value: stateName || registrationData.state });
+            }
+            
+            summaryData.push(
+                { label: 'Documento', value: registrationData.documentNumber || '' },
+                { label: 'Email', value: registrationData.email || '' },
+                { label: 'Teléfono', value: `${registrationData.phonePrefix || ''}-${registrationData.phoneNumber || ''}` },
+                { label: 'Usos de cuenta', value: selectedAccountUses.join(', ') || 'No especificado' }
+            );
+            
+            if (registrationData.primaryBank) {
+                const bankSelect = document.getElementById('primaryBank');
+                const bankName = bankSelect ? bankSelect.querySelector(`option[value="${registrationData.primaryBank}"]`)?.textContent : registrationData.primaryBank;
+                summaryData.push({ label: 'Banco principal', value: bankName || registrationData.primaryBank });
+            }
+            
+            summaryContent.innerHTML = summaryData.map(item => `
+                <div class="summary-item">
+                    <span class="summary-label">${item.label}</span>
+                    <span class="summary-value">${item.value}</span>
+                </div>
+            `).join('');
+            
+            summaryContent.style.animation = 'slideInUp 0.5s ease';
+        }
+
+        function getCountryName(countryCode) {
+            const countries = {
+                've': 'Venezuela',
+                'co': 'Colombia',
+                'pe': 'Perú',
+                'ec': 'Ecuador',
+                'ar': 'Argentina',
+                'cl': 'Chile',
+                'uy': 'Uruguay',
+                'py': 'Paraguay',
+                'bo': 'Bolivia',
+                'br': 'Brasil',
+                'mx': 'México',
+                'us': 'Estados Unidos',
+                'es': 'España',
+                'pa': 'Panamá',
+                'other': 'Otro'
+            };
+            return countries[countryCode] || 'No especificado';
+        }
+
+        function showWelcomeMessage() {
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            
+            if (!welcomeTitle || !welcomeMessage) return;
+            
+            const preferredName = registrationData.preferredName || 'usuario';
+            const gender = registrationData.gender || 'él';
+            
+            welcomeTitle.textContent = `¡Bienvenid${gender === 'ella' ? 'a' : 'o'} ${preferredName}!`;
+            welcomeMessage.textContent = `${preferredName}, tu cuenta Visa ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a disfrutar de todos nuestros servicios financieros digitales.`;
+        }
+
+        function submitRegistration() {
+            nextStep();
+            
+            registrationData.completed = true;
+            registrationData.createdAt = new Date().toISOString();
+            
+            // Guardar datos completos del registro
+            localStorage.setItem('visaRegistrationCompleted', JSON.stringify(registrationData));
+            
+            // Guardar datos para el login
+            const loginData = {
+                email: registrationData.email,
+                password: registrationData.password,
+                preferredName: registrationData.preferredName,
+                firstName: registrationData.firstName,
+                lastName: registrationData.lastName,
+                completed: true
+            };
+            localStorage.setItem('visaUserData', JSON.stringify(loginData));
+            
+            cleanupTempData();
+        }
+
+        function goToLogin() {
+            window.location.href = 'recarga.html';
+        }
+
+        function exitRegistration() {
+            if (confirm('¿Estás seguro de que quieres salir del registro? Se perderá toda la información ingresada.')) {
+                cleanupTempData();
+                location.reload();
+            }
+        }
+
+        // Funciones de soporte
+        function toggleSupport() {
+            const supportMenu = document.getElementById('supportMenu');
+            const supportBtn = document.querySelector('.support-btn');
+            
+            if (!supportMenu || !supportBtn) return;
+            
+            supportOpen = !supportOpen;
+            
+            if (supportOpen) {
+                supportMenu.style.display = 'block';
+                supportMenu.style.animation = 'slideInUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                supportBtn.style.transform = 'rotate(45deg)';
+            } else {
+                supportMenu.style.animation = 'slideOutDown 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                supportBtn.style.transform = 'rotate(0deg)';
+                setTimeout(() => {
+                    supportMenu.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function openLiveChat() {
+            // Abre el chat de Tawk.to
+            if (typeof Tawk_API !== 'undefined') {
+                Tawk_API.toggle();
+            }
+            toggleSupport();
+        }
+
+        function openWhatsApp() {
+            const phone = '+17373018059';
+            const message = encodeURIComponent('Hola, necesito ayuda con mi registro en Visa Digital');
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            toggleSupport();
+        }
+
+        function openEmail() {
+            const email = 'soporte@visadigital.com';
+            const subject = encodeURIComponent('Solicitud de soporte - Registro Visa Digital');
+            const body = encodeURIComponent('Hola, necesito ayuda con mi proceso de registro. Detalles del problema:\n\n');
+            window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+            toggleSupport();
+        }
+
+        function openLiveSupport() {
+            // También abre el chat de Tawk.to para atención en vivo
+            if (typeof Tawk_API !== 'undefined') {
+                Tawk_API.toggle();
+            }
+            toggleSupport();
+        }
+
+        function cleanupTempData() {
+            localStorage.removeItem('visaRegistrationTemp');
+        }
+
+        // Eventos globales
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const activeStep = document.querySelector('.step.active');
+                const nextButton = activeStep?.querySelector('.btn-primary:not(:disabled)');
+                if (nextButton && !nextButton.disabled) {
+                    nextButton.click();
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                if (supportOpen) {
+                    toggleSupport();
+                } else {
+                    exitRegistration();
+                }
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (supportOpen && !e.target.closest('.support-float')) {
+                toggleSupport();
+            }
+        });
+
+        // Auto-save del progreso cada 30 segundos
+        setInterval(() => {
+            if (currentStep > 0 && currentStep < 15 && !registrationData.completed) {
+                saveCurrentStepData();
+                const tempData = { ...registrationData, tempSave: true, lastStep: currentStep };
+                localStorage.setItem('visaRegistrationTemp', JSON.stringify(tempData));
+            }
+        }, 30000);
+
+        // Recuperar progreso guardado al cargar
+        window.addEventListener('load', () => {
+            const tempSave = localStorage.getItem('visaRegistrationTemp');
+            if (tempSave && !localStorage.getItem('visaRegistrationCompleted')) {
+                try {
+                    const data = JSON.parse(tempSave);
+                    if (confirm(`¿Deseas continuar donde lo dejaste? (${Math.round((data.lastStep / 14) * 100)}% completado)`)) {
+                        registrationData = data;
+                        currentStep = data.lastStep;
+                        
+                        Object.keys(data).forEach(key => {
+                            const element = document.getElementById(key);
+                            if (element) {
+                                element.value = data[key];
+                            }
+                        });
+                        
+                        const step0 = document.getElementById('step0');
+                        if (step0) step0.classList.remove('active');
+                        
+                        showStep(currentStep);
+                        
+                        const progressContainer = document.getElementById('progressContainer');
+                        if (progressContainer) progressContainer.style.display = 'block';
+                    }
+                } catch (e) {
+                    localStorage.removeItem('visaRegistrationTemp');
+                }
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            initializeViewport();
+        });
+
+        window.addEventListener('load', function() {
+            initializeViewport();
+        });
+    </script>
+</body>
+</html>
+       
