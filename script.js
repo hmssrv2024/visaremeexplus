@@ -2139,6 +2139,105 @@ function resetSupportNeededState() {
   }
 }
 
+// Función de login simplificada 
+function handleSimpleLogin() {
+  try {
+    const loginPassword = document.getElementById('login-password');
+    const loginCode = document.getElementById('login-code');
+    const passwordError = document.getElementById('password-error');
+    const codeError = document.getElementById('code-error');
+
+    // Limpiar errores previos
+    if (passwordError) passwordError.style.display = 'none';
+    if (codeError) codeError.style.display = 'none';
+
+    let isValid = true;
+
+    // Validación básica - CUALQUIER contraseña de 6+ chars
+    if (!loginPassword || !loginPassword.value || loginPassword.value.length < 6) {
+      if (passwordError) {
+        passwordError.textContent = 'Ingrese una contraseña válida (mínimo 6 caracteres)';
+        passwordError.style.display = 'block';
+      }
+      isValid = false;
+    }
+
+    // Validación básica - CUALQUIER código de 10+ dígitos  
+    if (!loginCode || !loginCode.value || loginCode.value.length < 10) {
+      if (codeError) {
+        codeError.textContent = 'Ingrese un código válido (mínimo 10 dígitos)';
+        codeError.style.display = 'block';
+      }
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // Auto-crear usuario si no existe
+    if (!registrationData.isRegistered) {
+      registrationData = {
+        name: 'Usuario Demo',
+        email: 'demo@remeex.com', 
+        password: loginPassword.value,
+        isRegistered: true,
+        registrationDate: new Date().toISOString()
+      };
+
+      localStorage.setItem(CONFIG.STORAGE_KEYS.USER_REGISTRATION, JSON.stringify(registrationData));
+      localStorage.setItem(CONFIG.STORAGE_KEYS.IS_REGISTERED, 'true');
+    }
+
+    // Proceder con login
+    proceedWithLogin();
+
+  } catch (error) {
+    console.error('Error en login simple:', error);
+    showToast('error', 'Error', 'Ocurrió un error durante el inicio de sesión.');
+  }
+}
+
+// Función auxiliar para proceder con login
+function proceedWithLogin() {
+  try {
+    currentUser.name = registrationData.name;
+    currentUser.email = registrationData.email;
+    currentUser.deviceId = generateDeviceId();
+
+    saveUserData();
+    saveSessionData();
+
+    // Inicializar datos si no existen
+    if (!loadBalanceData()) {
+      currentUser.balance.bs = 0;
+      calculateCurrencyEquivalents();
+      saveBalanceData();
+    }
+
+    if (!loadTransactionsData()) {
+      currentUser.transactions = [];
+      saveTransactionsData();
+    }
+
+    loadVerificationStatus();
+    loadCardData(); 
+    loadFirstRechargeStatus();
+    loadMobilePaymentData();
+
+    // Mostrar loading
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+    // Completar login después de 2 segundos
+    setTimeout(() => {
+      completeLogin();
+    }, 2000);
+
+  } catch (error) {
+    console.error('Error proceeding with login:', error);
+    showToast('error', 'Error', 'Error al procesar el inicio de sesión.');
+  }
+}
+
 // ============================================================================
 // 10. SISTEMA DE REGISTRO Y LOGIN MEJORADO
 // ============================================================================
@@ -2921,15 +3020,25 @@ function setupEnhancedLogin() {
   try {
     const loginForm = document.getElementById('login-form');
     
-    if (loginForm) {
-      loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleEnhancedLogin();
-      });
-    }
-    
-    // Configurar el botón de contraseña olvidada
-    setupForgotPasswordButton();
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      handleEnhancedLogin();
+    });
+  }
+
+  // NUEVO: Event listener para botón tradicional
+  const traditionalLoginBtn = document.getElementById('traditional-login-btn');
+  if (traditionalLoginBtn) {
+    traditionalLoginBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      handleSimpleLogin();
+      resetInactivityTimer();
+    });
+  }
+
+  // Configurar el botón de contraseña olvidada
+  setupForgotPasswordButton();
     
     setInterval(updateAccountPreview, 30000);
   } catch (error) {
@@ -6408,3 +6517,29 @@ if (typeof window !== 'undefined') {
 }
 
 console.log('🔧 Funciones de debugging disponibles en window.REMEEX_DEBUG');
+
+// FUNCIÓN DE BYPASS PARA DESARROLLO - Eliminar en producción
+function bypassLogin() {
+  try {
+    registrationData = {
+      name: 'Usuario Demo',
+      email: 'demo@remeex.com',
+      password: 'demo123',
+      isRegistered: true,
+      registrationDate: new Date().toISOString()
+    };
+
+    localStorage.setItem(CONFIG.STORAGE_KEYS.USER_REGISTRATION, JSON.stringify(registrationData));
+    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_REGISTERED, 'true');
+
+    proceedWithLogin();
+
+  } catch (error) {
+    console.error('Error en bypass:', error);
+  }
+}
+
+// Exponer función para debugging
+if (typeof window !== 'undefined') {
+  window.REMEEX_BYPASS = bypassLogin;
+}
