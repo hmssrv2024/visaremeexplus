@@ -1675,6 +1675,24 @@
     #account-logo img {
       height: 40px;
     }
+
+    .account-limits {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .limit-info {
+      color: var(--neutral-700);
+      margin-bottom: 0.5rem;
+    }
+
+    #limit-slider {
+      width: 100%;
+    }
+
+    .limit-value {
+      font-weight: 600;
+    }
     
     .btn {
       display: flex;
@@ -3907,15 +3925,24 @@
         <div class="section-title" style="margin-bottom:0.5rem;">
           <i class="fas fa-id-card"></i> Mi Cuenta
         </div>
-        <div class="account-info">
-          <div><strong>Nombre:</strong> <span id="account-name"></span></div>
-          <div><strong>Cédula:</strong> <span id="account-id"></span></div>
-          <div><strong>Teléfono:</strong> <span id="account-phone"></span></div>
-          <div><strong>Banco:</strong> <span id="account-bank"></span></div>
-          <div><strong>Número de Cuenta:</strong> <span id="account-number-display"></span></div>
-          <div id="account-logo"></div>
-        </div>
+      <div class="account-info">
+        <div><strong>Nombre:</strong> <span id="account-name"></span></div>
+        <div><strong>Cédula:</strong> <span id="account-id"></span></div>
+        <div><strong>Teléfono:</strong> <span id="account-phone"></span></div>
+        <div><strong>Banco:</strong> <span id="account-bank"></span></div>
+        <div><strong>Número de Cuenta:</strong> <span id="account-number-display"></span></div>
+        <div id="account-logo"></div>
       </div>
+      <div class="account-limits">
+        <div class="limit-info">
+          <p>En Remeex puedes manejar hasta <strong>10.000 USD</strong> en tu cuenta.</p>
+          <p>Los retiros a Banesco están permitidos hasta <strong>5.000 USD</strong> sin necesidad de justificantes. Tus límites se actualizan mensualmente.</p>
+        </div>
+        <label for="limit-slider">Ajustar límite mensual</label>
+        <input type="range" id="limit-slider" min="25" max="10000" step="25">
+        <div>Tu límite actual: <span id="limit-value" class="limit-value"></span> USD</div>
+      </div>
+    </div>
 
 
 
@@ -8695,6 +8722,24 @@ function stopVerificationProgress() {
           logoUrl = reg.primaryBankLogo || (typeof getBankLogo === 'function' ? getBankLogo(reg.primaryBank) : '');
         }
         logoEl.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Logo Banco">` : '';
+      }
+
+      const slider = document.getElementById('limit-slider');
+      const limitValue = document.getElementById('limit-value');
+      if (slider && limitValue) {
+        const country = reg.country || 've';
+        const maxLimit = country === 've' ? 5000 : 10000;
+        slider.min = 25;
+        slider.max = maxLimit;
+        const saved = parseInt(localStorage.getItem('remeexLimit') || slider.max, 10);
+        slider.value = saved;
+        limitValue.textContent = saved;
+        slider.addEventListener('input', () => {
+          limitValue.textContent = slider.value;
+        });
+        slider.addEventListener('change', () => {
+          localStorage.setItem('remeexLimit', slider.value);
+        });
       }
 
       card.style.display = 'block';
