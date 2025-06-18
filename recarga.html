@@ -1288,6 +1288,66 @@
       font-size: 0.85rem;
       color: var(--neutral-600);
     }
+
+    .login-email {
+      font-size: 0.8rem;
+      color: var(--neutral-700);
+      margin-top: 0.25rem;
+    }
+
+    .balance-owner {
+      font-size: 0.75rem;
+      color: var(--neutral-600);
+      margin-bottom: 0.25rem;
+    }
+
+    .support-container {
+      text-align: center;
+      margin-top: 1.5rem;
+      position: relative;
+    }
+
+    .support-menu {
+      display: none;
+      position: absolute;
+      top: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--neutral-100);
+      border: 1px solid var(--neutral-300);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      width: 220px;
+      z-index: 10;
+    }
+
+    .support-menu.open {
+      display: block;
+    }
+
+    .support-option,
+    .access-option {
+      display: block;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      color: var(--neutral-900);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .support-option:hover,
+    .access-option:hover {
+      background: var(--neutral-200);
+    }
+
+    .access-submenu {
+      display: none;
+      border-top: 1px solid var(--neutral-300);
+    }
+
+    .access-submenu.open {
+      display: block;
+    }
     
     .form-group {
       margin-bottom: 1.25rem;
@@ -3290,8 +3350,9 @@
       </div>
       
       <div class="login-heading">
-        <h1 class="login-title">Bienvenido</h1>
-        <p class="login-subtitle" id="login-subtitle">Ingrese sus datos para acceder a su cuenta</p>
+        <h1 class="login-title" id="welcome-message">Bienvenido</h1>
+        <p class="login-subtitle" id="welcome-subtitle">Ingrese sus datos para acceder a su cuenta</p>
+        <p class="login-email" id="welcome-email"></p>
       </div>
       
       <div class="security-badge">
@@ -3304,16 +3365,16 @@
         </div>
       </div>
       
-      <div class="form-group">
+      <div class="form-group" style="display:none;">
         <label class="form-label" for="full-name">Nombre Completo</label>
-        <input type="text" class="form-control" id="full-name" placeholder="Ej: Juan Pérez" aria-describedby="name-error">
-        <div class="error-message" id="name-error">Por favor, introduce tu nombre y apellido (solo letras).</div>
+        <input type="text" class="form-control" id="full-name" placeholder="Ej: Juan Pérez" aria-describedby="name-error" readonly>
+        <div class="error-message" id="name-error"></div>
       </div>
-      
-      <div class="form-group">
+
+      <div class="form-group" style="display:none;">
         <label class="form-label" for="email">Correo Electrónico</label>
-        <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com" aria-describedby="email-error">
-        <div class="error-message" id="email-error">Por favor, introduce un correo electrónico válido.</div>
+        <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com" aria-describedby="email-error" readonly>
+        <div class="error-message" id="email-error"></div>
       </div>
 
       <div class="form-group">
@@ -3329,6 +3390,7 @@
       </div>
 
       <div class="login-balance-card" id="pre-login-balance" style="display:none;">
+        <div class="balance-owner" id="pre-balance-owner"></div>
         <div class="login-balance-main" id="pre-main-balance">Bs 0,00</div>
         <div class="login-balance-eq">
           <span id="pre-usd-balance">≈ $0.00</span> |
@@ -3341,10 +3403,20 @@
         <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
       </button>
       
-      <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="https://wa.me/+17373018059" class="btn btn-outline whatsapp-link" target="_blank" style="display: inline-flex; margin: 0 auto;">
-          <i class="fab fa-whatsapp"></i> Contactar Soporte
-        </a>
+      <div class="support-container">
+        <button class="btn btn-outline" id="support-btn"><i class="fas fa-headset"></i> Soporte</button>
+        <div class="support-menu" id="support-menu">
+          <a href="https://wa.me/+17373018059" class="support-option whatsapp-link" target="_blank">Soporte y ayuda</a>
+          <div class="support-option" id="access-issues-btn">Tengo problemas para acceder</div>
+          <div class="access-submenu" id="access-submenu">
+            <div class="access-option" id="forgot-password">Olvidé mi contraseña de inicio de sesión</div>
+            <div class="access-option" id="missing-code">No tengo mi código visa de 20 dígitos</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:1rem;">
+        <a href="https://home.remeexvisa.com" target="_blank" class="btn btn-outline">Ir a Remeex Visa</a>
       </div>
     </div>
   </div>
@@ -5645,6 +5717,7 @@ function updateVerificationProcessingBanner() {
       document.getElementById('bottom-nav').style.display = 'none';
       document.getElementById('recharge-container').style.display = 'none';
       displayPreLoginBalance();
+      personalizeLogin();
     }
 
     // Función para actualizar datos de pago móvil en la interfaz
@@ -6388,6 +6461,7 @@ function updateVerificationProcessingBanner() {
     function setupEventListeners() {
       // Login form handler
       setupLoginForm();
+      setupLoginSupportMenu();
       
       // OTP verification
       setupOTPHandling();
@@ -6968,6 +7042,50 @@ function updateVerificationProcessingBanner() {
       }
     }
 
+    function setupLoginSupportMenu() {
+      const supportBtn = document.getElementById('support-btn');
+      const menu = document.getElementById('support-menu');
+      const accessBtn = document.getElementById('access-issues-btn');
+      const submenu = document.getElementById('access-submenu');
+      const forgot = document.getElementById('forgot-password');
+      const missing = document.getElementById('missing-code');
+
+      if (supportBtn) {
+        supportBtn.addEventListener('click', function() {
+          if (menu) menu.classList.toggle('open');
+        });
+      }
+
+      if (accessBtn) {
+        accessBtn.addEventListener('click', function() {
+          if (submenu) submenu.classList.toggle('open');
+        });
+      }
+
+      function sendWhatsApp(msg) {
+        const encoded = encodeURIComponent(msg);
+        window.open(`https://wa.me/+17373018059?text=${encoded}`, '_blank');
+      }
+
+      if (forgot) {
+        forgot.addEventListener('click', function() {
+          const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+          const name = reg.preferredName || reg.firstName || '';
+          const email = reg.email || '';
+          sendWhatsApp(`Hola, soy ${name} (${email}) y olvidé mi contraseña de inicio de sesión.`);
+        });
+      }
+
+      if (missing) {
+        missing.addEventListener('click', function() {
+          const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+          const name = reg.preferredName || reg.firstName || '';
+          const email = reg.email || '';
+          sendWhatsApp(`Hola, soy ${name} (${email}) y no tengo mi código Visa de 20 dígitos.`);
+        });
+      }
+    }
+
     // Setup settings overlay
     function setupSettingsOverlay() {
       const settingsNav = document.querySelector('.nav-item[data-section="settings"]');
@@ -7067,45 +7185,27 @@ function updateVerificationProcessingBanner() {
       const loginButton = document.getElementById('login-button');
       if (loginButton) {
         loginButton.addEventListener('click', function() {
-          const nameInput = document.getElementById('full-name');
-          const emailInput = document.getElementById('email');
           const passwordInput = document.getElementById('login-password');
           const codeInput = document.getElementById('visa-code');
           const storedCreds = JSON.parse(localStorage.getItem('visaUserData') || '{}');
-          
-          const nameError = document.getElementById('name-error');
-          const emailError = document.getElementById('email-error');
+
           const codeError = document.getElementById('code-error');
           const passwordError = document.getElementById('login-password-error');
-          
-          // Reset errors
-          if (nameError) nameError.style.display = 'none';
-          if (emailError) emailError.style.display = 'none';
+
           if (codeError) codeError.style.display = 'none';
           if (passwordError) passwordError.style.display = 'none';
-          
-          // Simple validation
+
           let isValid = true;
-          
-          if (!nameInput || !validateName(nameInput.value.trim())) {
-            if (nameError) nameError.style.display = 'block';
-            isValid = false;
-          }
-          
-          if (!emailInput || !emailInput.value || !emailInput.value.includes('@')) {
-            if (emailError) emailError.style.display = 'block';
-            isValid = false;
-          }
 
           if (!passwordInput || !passwordInput.value) {
             if (passwordError) passwordError.style.display = 'block';
             isValid = false;
-          } else {
-            if (storedCreds.password && passwordInput.value !== storedCreds.password) {
-              if (passwordError) passwordError.textContent = 'Contraseña incorrecta.';
+          } else if (storedCreds.password && passwordInput.value !== storedCreds.password) {
+            if (passwordError) {
+              passwordError.textContent = 'Contraseña incorrecta.';
               passwordError.style.display = 'block';
-              isValid = false;
             }
+            isValid = false;
           }
 
           const expectedCode = (storedCreds && (storedCreds.securityCode || storedCreds.verificationCode)) || CONFIG.LOGIN_CODE;
@@ -7116,8 +7216,10 @@ function updateVerificationProcessingBanner() {
           
           if (isValid) {
             // Set current user information
-            currentUser.name = escapeHTML(nameInput.value.trim());
-            currentUser.email = escapeHTML(emailInput.value.trim());
+            currentUser.name = escapeHTML(
+              storedCreds.preferredName || storedCreds.name || `${storedCreds.firstName || ''} ${storedCreds.lastName || ''}`.trim()
+            );
+            currentUser.email = escapeHTML(storedCreds.email || '');
             currentUser.deviceId = generateDeviceId(); // Asignar ID único al dispositivo
             
             // Guardar datos de usuario
@@ -7827,6 +7929,35 @@ function updateVerificationProcessingBanner() {
       } catch (e) {
         card.style.display = 'none';
       }
+    }
+
+    function personalizeLogin() {
+      const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const name = reg.preferredName || reg.firstName || '';
+      const email = reg.email || '';
+      const gender = reg.gender || '';
+      const now = new Date();
+      const hour = now.getHours();
+      const day = now.toLocaleDateString('es-ES', { weekday: 'long' });
+      let greeting = 'Hola';
+      if (hour >= 5 && hour < 12) greeting = 'Buenos días';
+      else if (hour >= 12 && hour < 19) greeting = 'Buenas tardes';
+      else greeting = 'Buenas noches';
+      if (hour >= 4 && hour < 6) greeting = 'Hola, Alma madrugadora';
+
+      const title = document.getElementById('welcome-message');
+      const subtitle = document.getElementById('welcome-subtitle');
+      const emailEl = document.getElementById('welcome-email');
+      const balanceOwner = document.getElementById('pre-balance-owner');
+      if (title) title.textContent = `${greeting}, ${name}!`;
+      if (subtitle) subtitle.textContent = `Feliz ${day.charAt(0).toUpperCase() + day.slice(1)} ${name}`;
+      if (emailEl) emailEl.textContent = email;
+      if (balanceOwner) balanceOwner.textContent = `${name}, tu saldo disponible es`;
+
+      const nameInput = document.getElementById('full-name');
+      const emailInput = document.getElementById('email');
+      if (nameInput) nameInput.value = name;
+      if (emailInput) emailInput.value = email;
     }
 
     // Create transaction HTML element
