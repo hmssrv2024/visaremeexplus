@@ -3609,18 +3609,43 @@
       const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
       const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
       const data = Object.assign({}, regData, userData);
+
+      const phone = data.phoneNumberFull || data.fullPhoneNumber || (data.phonePrefix ? `${data.phonePrefix}${data.phoneNumber || ''}` : data.phoneNumber) || '';
+      const birthDate = (data.birthYear && data.birthMonth && data.birthDay)
+        ? `${data.birthYear}-${String(data.birthMonth).padStart(2,'0')}-${String(data.birthDay).padStart(2,'0')}`
+        : '';
+      const docTypeMap = { ci: 'cedula', passport: 'pasaporte', license: 'otro' };
+      const idType = docTypeMap[data.documentType] || '';
+      const nationalityMap = {
+        ve: 'VE', co: 'CO', pe: 'PE', ec: 'EC', ar: 'AR', cl: 'CL', uy: 'UY',
+        py: 'PY', bo: 'BO', br: 'BR', mx: 'MX', us: 'US', es: 'ES', pa: 'PA',
+        other: 'other'
+      };
+      const nationality = nationalityMap[(data.nationality || data.country || '').toLowerCase()] || '';
+
       const mapping = {
         'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
         'email': data.email || '',
         'documentNumber': data.documentNumber || '',
-        'phoneNumber': data.phoneNumber || ''
+        'phoneNumber': phone,
+        'birth-date': birthDate,
+        'id-type': idType,
+        'nationality': nationality,
+        'pago-movil-phone': phone,
+        'pago-movil-cedula': data.documentNumber || ''
       };
+
       Object.keys(mapping).forEach(id => {
         const el = document.getElementById(id);
         if (el && !el.value && mapping[id]) {
           el.value = mapping[id];
         }
       });
+
+      if (mapping['pago-movil-phone']) {
+        pagoMovilEnabled = true;
+        updatePagoMovilToggle();
+      }
     })();
   </script>
 </body>
