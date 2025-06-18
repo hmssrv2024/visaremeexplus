@@ -1543,71 +1543,7 @@
   <!-- Tawk.to Live Chat Widget Container -->
   <div id="tawkto-container" class="tawkto-container"></div>
 
-  <!-- Tawk.to Script -->
-  <script type="text/javascript">
-    function loadTawkTo() {
-      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-      
-      Tawk_API.onLoad = function(){
-        document.getElementById('tawkto-container').style.display = 'block';
-        console.log('Tawk.to cargado correctamente');
-      };
-      
-      try {
-        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-        s1.async=true;
-        s1.src='https://embed.tawk.to/67cca8c614b1ee191063c36a/default';
-        s1.charset='UTF-8';
-        s1.setAttribute('crossorigin','*');
-        s1.setAttribute('importance', 'high');
-        s0.parentNode.insertBefore(s1,s0);
-        
-        setTimeout(function() {
-          const tawktoFrame = document.querySelector('iframe[title*="chat"]');
-          if (!tawktoFrame) {
-            console.log('Reintentando cargar Tawk.to...');
-            loadTawkTo();
-          }
-        }, 5000);
-      } catch (e) {
-        console.error('Error al cargar Tawk.to:', e);
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadTawkTo);
-    } else {
-      loadTawkTo();
-    }
-
-    function ensureTawkToVisibility() {
-      const checkInterval = setInterval(function() {
-        const tawktoFrame = document.querySelector('iframe[title*="chat"]');
-        const tawktoContainer = document.getElementById('tawkto-container');
-        
-        if (tawktoFrame && tawktoContainer) {
-          tawktoContainer.style.display = 'block';
-          tawktoContainer.style.visibility = 'visible';
-          tawktoContainer.style.zIndex = '9999';
-          
-          tawktoFrame.style.display = 'block';
-          tawktoFrame.style.visibility = 'visible';
-          tawktoFrame.style.zIndex = '9999';
-          
-          clearInterval(checkInterval);
-          setInterval(function() {
-            if (tawktoFrame.style.display !== 'block') {
-              tawktoFrame.style.display = 'block';
-              tawktoFrame.style.visibility = 'visible';
-            }
-          }, 3000);
-        }
-      }, 1000);
-    }
-
-    setTimeout(ensureTawkToVisibility, 2000);
-  </script>
-
+  <!-- Scripts principales -->
   <script src="script.js"></script>
 </body>
 </html>
