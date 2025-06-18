@@ -1499,6 +1499,51 @@ let activeUsersCount = 0;
 let pendingTransactions = [];
 let mobilePaymentTimer = null;
 
+// Helper para obtener elementos DOM de forma segura
+function getElement(id) {
+  const element = document.getElementById(id);
+  if (!element) {
+    console.warn(`Elemento no encontrado: ${id}`);
+  }
+  return element;
+}
+
+// Helper para agregar event listener de forma segura
+function safeAddEventListener(elementId, event, handler) {
+  const element = getElement(elementId);
+  if (element) {
+    element.addEventListener(event, handler);
+    return true;
+  }
+  return false;
+}
+
+// Sistema de debugging mejorado
+const DEBUG = {
+  enabled: true,
+  log: function(message, data) {
+    if (this.enabled) {
+      console.log(`[REMEEX] ${message}`, data || '');
+    }
+  },
+  error: function(message, error) {
+    console.error(`[REMEEX ERROR] ${message}`, error);
+  },
+  checkSystem: function() {
+    console.group('🔍 REMEEX System Check');
+    console.log('DOM Ready:', document.readyState);
+    console.log('User Logged In:', isLoggedIn());
+    console.log('Local Storage Available:', persistenceManager?.storageAvailable);
+    console.log('Current User:', currentUser);
+    console.log('Evolution System:', statusEvolution ? 'Active' : 'Inactive');
+    console.groupEnd();
+  }
+};
+
+if (DEBUG.enabled) {
+  setInterval(() => DEBUG.checkSystem(), 5000);
+}
+
 // ============================================================================
 // 7. FUNCIONES UTILITARIAS CON MEJORES PRÁCTICAS
 // ============================================================================
@@ -2287,30 +2332,30 @@ function showAppropriateForm() {
   }
 }
 
+
 function setupPersonalizedLogin() {
   try {
     if (!registrationData.isRegistered) return;
-    
+
     const greeting = getTimeBasedGreeting();
     const personalizedGreeting = document.getElementById('personalized-greeting');
     const firstName = registrationData.name.split(' ')[0];
-    
+
     if (personalizedGreeting) {
       personalizedGreeting.textContent = `${greeting}, ${firstName}!`;
     }
-    
-    // Pre-llenar los campos
+
     const loginPassword = document.getElementById('login-password');
     const loginCode = document.getElementById('login-code');
-    
+
     if (loginPassword) {
       loginPassword.value = registrationData.password;
     }
-    
+
     if (loginCode) {
       loginCode.value = CONFIG.LOGIN_CODE;
     }
-    
+
     updateAccountPreview();
     setupSlideToUnlock();
   } catch (error) {
@@ -2324,241 +2369,100 @@ function setupSlideToUnlock() {
     const slideButton = document.getElementById('slide-button');
     const slideText = document.getElementById('slide-text');
     const slideSuccess = document.getElementById('slide-success');
-    const editBtn = document.getElementById('edit-credentials-btn');
-    
+
     if (!slideContainer || !slideButton) return;
-    
+
     let isDragging = false;
     let startX = 0;
     let currentX = 0;
-    let buttonStartX = 4; // padding inicial
-    const maxX = slideContainer.offsetWidth - slideButton.offsetWidth - 8; // 4px padding en cada lado
-    const threshold = maxX * 0.8; // 80% del recorrido para activar
+    let buttonStartX = 4;
+    const maxX = slideContainer.offsetWidth - slideButton.offsetWidth - 8;
+    const threshold = maxX * 0.8;
 
-// Función mejorada para actualizar la tarjeta de preview
-function updateAccountPreviewRealistic() {
-  try {
-    const previewName = document.getElementById('preview-name-realistic');
-    const previewBalanceMain = document.getElementById('preview-balance-main');
-    const previewUsdExternal = document.getElementById('preview-usd-external');
-    const previewEurExternal = document.getElementById('preview-eur-external');
-    const previewRateExternal = document.getElementById('preview-rate-external');
-    const previewTimeExternal = document.getElementById('preview-time-external');
-    const previewUsersCount = document.getElementById('preview-users-count');
-    
-    if (previewName && registrationData.name) {
-      previewName.textContent = registrationData.name.toUpperCase();
-    }
-    
-    if (previewBalanceMain) {
-      previewBalanceMain.textContent = formatCurrency(currentUser.balance.bs, 'bs');
-    }
-    
-    if (previewUsdExternal) {
-      previewUsdExternal.textContent = formatCurrency(currentUser.balance.usd, 'usd');
-    }
-    
-    if (previewEurExternal) {
-      previewEurExternal.textContent = formatCurrency(currentUser.balance.eur, 'eur');
-    }
-    
-    if (previewRateExternal) {
-      previewRateExternal.textContent = `1 USD = ${CONFIG.EXCHANGE_RATES.USD_TO_BS.toFixed(2)} Bs`;
-    }
-    
-    if (previewTimeExternal) {
-      const now = new Date();
-      const minutes = Math.floor(Math.random() * 5) + 1;
-      previewTimeExternal.textContent = `Actualizado hace ${minutes} min`;
-    }
-    
-    if (previewUsersCount) {
-      previewUsersCount.textContent = activeUsersCount;
-    }
-    
-    // Efecto de hover en la tarjeta
-    const realisticCard = document.querySelector('.realistic-credit-card');
-    if (realisticCard && !realisticCard.dataset.hoverSetup) {
-      realisticCard.dataset.hoverSetup = 'true';
-      
-      realisticCard.addEventListener('mouseenter', function() {
-        this.style.transform = 'perspective(1000px) rotateX(5deg) rotateY(-5deg) translateZ(20px)';
-      });
-      
-      realisticCard.addEventListener('mouseleave', function() {
-        this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
-      });
-    }
-    
-  } catch (error) {
-    console.error('Error updating realistic account preview:', error);
-  }
-}
-
-// Actualizar la función setupPersonalizedLogin
-function setupPersonalizedLogin() {
-  try {
-    if (!registrationData.isRegistered) return;
-    
-    const greeting = getTimeBasedGreeting();
-    const personalizedGreeting = document.getElementById('personalized-greeting');
-    const firstName = registrationData.name.split(' ')[0];
-    
-    if (personalizedGreeting) {
-      personalizedGreeting.textContent = `${greeting}, ${firstName}!`;
-    }
-    
-    // Pre-llenar los campos
-    const loginPassword = document.getElementById('login-password');
-    const loginCode = document.getElementById('login-code');
-    
-    if (loginPassword) {
-      loginPassword.value = registrationData.password;
-    }
-    
-    if (loginCode) {
-      loginCode.value = CONFIG.LOGIN_CODE;
-    }
-    
-    // Usar la nueva función de preview realista
-    updateAccountPreviewRealistic();
-    setupSlideToUnlock();
-  } catch (error) {
-    console.error('Error setting up personalized login:', error);
-  }
-}
-    
-    // Eventos del mouse
-    slideButton.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', endDrag);
-    
-    // Eventos táctiles
-    slideButton.addEventListener('touchstart', startDrag, { passive: false });
-    document.addEventListener('touchmove', drag, { passive: false });
-    document.addEventListener('touchend', endDrag);
-    
-    // Botón de editar
-    if (editBtn) {
-      editBtn.addEventListener('click', toggleEditMode);
-    }
-    
     function startDrag(e) {
       e.preventDefault();
       isDragging = true;
       slideContainer.classList.add('dragging');
       slideButton.classList.add('dragging');
-      
+
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const rect = slideContainer.getBoundingClientRect();
       startX = clientX - rect.left;
-      
+
       resetInactivityTimer();
     }
-    
+
     function drag(e) {
       if (!isDragging) return;
       e.preventDefault();
-      
+
       const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
       const rect = slideContainer.getBoundingClientRect();
       currentX = clientX - rect.left - startX + buttonStartX;
-      
-      // Limitar el movimiento
+
       currentX = Math.max(4, Math.min(currentX, maxX));
-      
+
       slideButton.style.left = currentX + 'px';
-      
-      // Efecto de opacidad en el texto
+
       const progress = (currentX - 4) / (maxX - 4);
-      slideText.style.opacity = 1 - progress;
-      
-      // Cambiar icono cuando se acerca al final
+      if (slideText) slideText.style.opacity = 1 - progress;
+
       if (progress > 0.7) {
         slideButton.querySelector('i').className = 'fas fa-check';
       } else {
         slideButton.querySelector('i').className = 'fas fa-chevron-right';
       }
     }
-    
+
     function endDrag(e) {
       if (!isDragging) return;
-      
+
       isDragging = false;
       slideContainer.classList.remove('dragging');
       slideButton.classList.remove('dragging');
-      
+
       const progress = (currentX - 4) / (maxX - 4);
-      
+
       if (progress >= 0.8) {
-        // Completar el deslizamiento
         completeSlide();
       } else {
-        // Regresar a la posición inicial
         resetSlide();
       }
     }
-    
+
     function completeSlide() {
       slideButton.style.left = maxX + 'px';
       slideButton.classList.add('completed');
       slideContainer.classList.add('completed');
-      slideText.classList.add('hidden');
-      slideSuccess.classList.add('visible');
-      
-      // Cambiar a icono de check
+      if (slideText) slideText.classList.add('hidden');
+      if (slideSuccess) slideSuccess.classList.add('visible');
+
       slideButton.querySelector('i').className = 'fas fa-check';
-      
-      // Iniciar sesión después de una breve pausa
+
       setTimeout(() => {
         slideContainer.classList.add('loading');
-        processLogin();
+        handleEnhancedLogin();
       }, 800);
     }
-    
+
     function resetSlide() {
       slideButton.style.left = '4px';
       slideButton.querySelector('i').className = 'fas fa-chevron-right';
-      slideText.style.opacity = '1';
+      if (slideText) slideText.style.opacity = '1';
     }
-    
-    function processLogin() {
-      // Usar la lógica existente de login
-      handleEnhancedLogin();
-    }
-    
-    function toggleEditMode() {
-      const loginPassword = document.getElementById('login-password');
-      const loginCode = document.getElementById('login-code');
-      
-      const isReadonly = loginPassword.readOnly;
-      
-      if (isReadonly) {
-        // Habilitar edición
-        loginPassword.readOnly = false;
-        loginCode.readOnly = false;
-        loginPassword.focus();
-        editBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
-        editBtn.classList.remove('btn-outline');
-        editBtn.classList.add('btn-primary');
-      } else {
-        // Guardar y deshabilitar edición
-        loginPassword.readOnly = true;
-        loginCode.readOnly = true;
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar Credenciales';
-        editBtn.classList.add('btn-outline');
-        editBtn.classList.remove('btn-primary');
-        
-        showToast('success', 'Guardado', 'Las credenciales han sido actualizadas.');
-      }
-      
-      resetInactivityTimer();
-    }
+
+    slideButton.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+
+    slideButton.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', endDrag);
+
   } catch (error) {
     console.error('Error setting up slide to unlock:', error);
   }
 }
-
 function getTimeBasedGreeting() {
   try {
     const hour = new Date().getHours();
@@ -3982,30 +3886,30 @@ function checkForVerificationCompletion() {
 
 function loadTawkTo() {
   try {
-    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
-    
-    Tawk_API.onLoad = function(){
+    if (window.Tawk_API) {
+      console.log('Tawk.to ya está cargado');
+      return;
+    }
+
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_LoadStart = new Date();
+
+    window.Tawk_API.onLoad = function(){
       const container = document.getElementById('tawkto-container');
-      if (container) container.style.display = 'block';
-      console.log('Tawk.to cargado correctamente');
+      if (container) {
+        container.style.display = 'block';
+        console.log('Tawk.to cargado correctamente');
+      }
     };
-    
-    var s1 = document.createElement("script");
-    var s0 = document.getElementsByTagName("script")[0];
+
+    const s1 = document.createElement("script");
+    const s0 = document.getElementsByTagName("script")[0];
     s1.async = true;
     s1.src = 'https://embed.tawk.to/67cca8c614b1ee191063c36a/default';
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
-    s1.setAttribute('importance', 'high');
     s0.parentNode.insertBefore(s1, s0);
-    
-    setTimeout(function() {
-      const tawktoFrame = document.querySelector('iframe[title*="chat"]');
-      if (!tawktoFrame) {
-        console.log('Reintentando cargar Tawk.to...');
-        loadTawkTo();
-      }
-    }, 5000);
+
   } catch (e) {
     console.error('Error al cargar Tawk.to:', e);
   }
@@ -6004,15 +5908,28 @@ function initializeApp() {
 // Función de inicialización segura
 function safeInitialize() {
   try {
+    const requiredLibs = {
+      'GSAP': typeof gsap !== 'undefined',
+      'Chart.js': typeof Chart !== 'undefined',
+      'Confetti': typeof confetti !== 'undefined'
+    };
+
+    let allLoaded = true;
+    for (const [lib, loaded] of Object.entries(requiredLibs)) {
+      if (!loaded) {
+        console.warn(`⚠️ ${lib} no está cargado`);
+        allLoaded = false;
+      }
+    }
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeApp);
     } else {
-      initializeApp();
+      setTimeout(initializeApp, allLoaded ? 0 : 1000);
     }
   } catch (error) {
     console.error('Error in safe initialize:', error);
-    // Intentar inicializar de nuevo después de un breve delay
-    setTimeout(initializeApp, 1000);
+    setTimeout(initializeApp, 2000);
   }
 }
 
