@@ -4067,36 +4067,8 @@
       try {
         // Cargar historial de sessionStorage
         const historyJson = sessionStorage.getItem(CONFIG.STORAGE_KEYS.TRANSACTION_HISTORY);
-        const seeded = sessionStorage.getItem(CONFIG.STORAGE_KEYS.HISTORY_INITIALIZED);
         if (historyJson) {
           transactionHistory = JSON.parse(historyJson);
-        } else if (!seeded) {
-          // Crear historial de ejemplo solo la primera vez
-          transactionHistory = [
-            {
-              id: 'RET-54321',
-              amount: 3500,
-              method: 'mobile',
-              destination: '0414-1234567',
-              bankName: 'Banesco',
-              status: 'completed',
-              date: '2025-05-05T15:30:00',
-              formattedDate: '05/05/2025 • 15:30'
-            },
-            {
-              id: 'RET-54322',
-              amount: 10000,
-              method: 'bank',
-              destination: '****1234',
-              bankName: 'Banco Provincial',
-              status: 'rejected',
-              reason: 'Cuenta no verificada',
-              date: '2025-05-01T09:45:00',
-              formattedDate: '01/05/2025 • 09:45'
-            }
-          ];
-          sessionStorage.setItem(CONFIG.STORAGE_KEYS.TRANSACTION_HISTORY, JSON.stringify(transactionHistory));
-          sessionStorage.setItem(CONFIG.STORAGE_KEYS.HISTORY_INITIALIZED, '1');
         } else {
           transactionHistory = [];
         }
@@ -4105,31 +4077,8 @@
         const pendingJson = sessionStorage.getItem(CONFIG.STORAGE_KEYS.PENDING_TRANSACTIONS);
         if (pendingJson) {
           pendingTransactions = JSON.parse(pendingJson);
-        } else if (!seeded) {
-          // Crear pendientes de ejemplo solo la primera vez
-          pendingTransactions = [
-            {
-              id: 'RET-12345',
-              amount: 5000,
-              method: 'mobile',
-              destination: '0424-7654321',
-              bankName: 'Banco de Venezuela',
-              status: 'pending_verification',
-              date: '2025-05-07T10:15:00',
-              formattedDate: '07/05/2025'
-            },
-            {
-              id: 'RET-12346',
-              amount: 25,
-              method: 'international',
-              destination: 'usuario@ejemplo.com',
-              bankName: 'PayPal',
-              status: 'processing',
-              date: '2025-05-06T14:30:00',
-              formattedDate: '06/05/2025'
-            }
-          ];
-          sessionStorage.setItem(CONFIG.STORAGE_KEYS.PENDING_TRANSACTIONS, JSON.stringify(pendingTransactions));
+        } else {
+          pendingTransactions = [];
         }
         
         // Actualizar UI con los datos cargados

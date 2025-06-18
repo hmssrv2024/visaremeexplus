@@ -5572,6 +5572,7 @@ function updateVerificationProcessingBanner() {
         }
       });
     } catch(e) { console.error("Error processing pending transactions from session:", e); }
+    sessionStorage.removeItem("remeexPendingTransactions");
   }
       const transferData = JSON.parse(sessionStorage.getItem(CONFIG.STORAGE_KEYS.TRANSFER_DATA) || 'null');
       
