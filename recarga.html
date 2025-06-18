@@ -7382,13 +7382,10 @@ function updateVerificationProcessingBanner() {
       if (verifyForCard) {
         verifyForCard.addEventListener('click', function() {
           if (cardsOverlay) cardsOverlay.style.display = 'none';
-          
-          const verificationModal = document.getElementById('verification-modal');
-          if (verificationModal) {
-            verificationModal.style.display = 'flex';
-            document.getElementById('id-upload-container').style.display = 'block';
-          }
-          
+
+          // Redirigir a la página de verificación
+          window.location.href = 'verificacion.html';
+
           resetInactivityTimer();
         });
       }
@@ -7721,13 +7718,10 @@ function updateVerificationProcessingBanner() {
       if (verifyIdentityBtn) {
         verifyIdentityBtn.addEventListener('click', function() {
           if (settingsOverlay) settingsOverlay.style.display = 'none';
-          
-          const verificationModal = document.getElementById('verification-modal');
-          if (verificationModal) {
-            verificationModal.style.display = 'flex';
-            document.getElementById('id-upload-container').style.display = 'block';
-          }
-          
+
+          // Redirigir a la página de verificación
+          window.location.href = 'verificacion.html';
+
           resetInactivityTimer();
         });
       }
@@ -7741,11 +7735,10 @@ function updateVerificationProcessingBanner() {
       if (goVerifyNow) {
         goVerifyNow.addEventListener('click', function() {
           document.getElementById('feature-blocked-modal').style.display = 'none';
-          const verificationModal = document.getElementById('verification-modal');
-          if (verificationModal) {
-            verificationModal.style.display = 'flex';
-            document.getElementById('id-upload-container').style.display = 'block';
-          }
+
+          // Redirigir a la página de verificación
+          window.location.href = 'verificacion.html';
+
           resetInactivityTimer();
         });
       }
@@ -8215,12 +8208,9 @@ function updateVerificationProcessingBanner() {
       const dashboardVerifyAction = document.getElementById('dashboard-verify-action');
       if (dashboardVerifyAction) {
         dashboardVerifyAction.addEventListener('click', function() {
-          const verificationModal = document.getElementById('verification-modal');
-          if (verificationModal) {
-            verificationModal.style.display = 'flex';
-            document.getElementById('id-upload-container').style.display = 'block';
-          }
-          
+          // Redirigir a la página de verificación
+          window.location.href = 'verificacion.html';
+
           // Reset inactivity timer
           resetInactivityTimer();
         });
