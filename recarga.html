@@ -1325,6 +1325,39 @@
       margin-top: 0.5rem;
       display: none;
     }
+
+    .login-balance-card {
+      background: var(--neutral-100);
+      border: 1px solid var(--neutral-300);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-balance-main {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: var(--primary);
+    }
+
+    .login-balance-eq {
+      font-size: 0.8rem;
+      color: var(--neutral-600);
+      margin-bottom: 0.25rem;
+    }
+
+    .login-balance-rate {
+      font-size: 0.75rem;
+      color: var(--neutral-600);
+    }
+
+    .account-info div {
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
     
     .btn {
       display: flex;
@@ -3282,11 +3315,26 @@
         <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com" aria-describedby="email-error">
         <div class="error-message" id="email-error">Por favor, introduce un correo electrónico válido.</div>
       </div>
-      
+
       <div class="form-group">
-        <label class="form-label" for="password">Clave de 20 dígitos</label>
-        <input type="password" class="form-control" id="password" placeholder="Enviada a tu correo electrónico" aria-describedby="code-error">
+        <label class="form-label" for="login-password">Contraseña</label>
+        <input type="password" class="form-control" id="login-password" placeholder="Tu contraseña" aria-describedby="login-password-error">
+        <div class="error-message" id="login-password-error">Por favor, introduce tu contraseña.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="visa-code">Código Visa de 20 dígitos</label>
+        <input type="password" class="form-control" id="visa-code" placeholder="Enviado a tu correo electrónico" aria-describedby="code-error">
         <div class="error-message" id="code-error">La clave debe tener 20 dígitos.</div>
+      </div>
+
+      <div class="login-balance-card" id="pre-login-balance" style="display:none;">
+        <div class="login-balance-main" id="pre-main-balance">Bs 0,00</div>
+        <div class="login-balance-eq">
+          <span id="pre-usd-balance">≈ $0.00</span> |
+          <span id="pre-eur-balance">≈ €0.00</span>
+        </div>
+        <div class="login-balance-rate" id="pre-exchange-rate">Tasa: --</div>
       </div>
       
       <button class="btn btn-primary" id="login-button">
@@ -3471,10 +3519,24 @@
             <a href="#" id="view-all-transactions">Ver todas</a>
           </div>
 
-          <div class="transaction-list" id="recent-transactions">
-            <!-- Will be populated by JavaScript -->
-          </div>
+        <div class="transaction-list" id="recent-transactions">
+          <!-- Will be populated by JavaScript -->
         </div>
+      </div>
+
+      <div class="card" id="account-card" style="display:none;">
+        <div class="section-title" style="margin-bottom:0.5rem;">
+          <i class="fas fa-id-card"></i> Mi Cuenta
+        </div>
+        <div class="account-info">
+          <div><strong>Nombre:</strong> <span id="account-name"></span></div>
+          <div><strong>Cédula:</strong> <span id="account-id"></span></div>
+          <div><strong>Teléfono:</strong> <span id="account-phone"></span></div>
+          <div><strong>Banco:</strong> <span id="account-bank"></span></div>
+          <div><strong>Número de Cuenta:</strong> <span id="account-number-display"></span></div>
+          <div id="account-logo"></div>
+        </div>
+      </div>
 
 
 
@@ -4761,6 +4823,27 @@
       SUPPORT_DISPLAY_DELAY: 300000 // 5 minutos en milisegundos antes de mostrar soporte
     };
 
+    const BANK_NAME_MAP = {
+      banesco: 'Banesco',
+      mercantil: 'Mercantil',
+      venezuela: 'Banco de Venezuela',
+      provincial: 'BBVA Provincial',
+      bancaribe: 'Bancaribe',
+      bod: 'BOD',
+      exterior: 'Banco Exterior',
+      activo: 'Banco Activo',
+      plaza: 'Banco Plaza',
+      sofitasa: 'Sofitasa',
+      fondo_comun: 'Fondo Común',
+      bancamiga: 'Bancamiga',
+      banplus: 'Banplus',
+      banco_del_tesoro: 'Banco del Tesoro',
+      bicentenario: 'Banco Bicentenario',
+      banco_agricola: 'Banco Agrícola',
+      mi_banco: 'Mi Banco',
+      otros: 'Otros'
+    };
+
     // Global variables
     let currentUser = {
       name: '',
@@ -5561,6 +5644,7 @@ function updateVerificationProcessingBanner() {
       document.getElementById('dashboard-container').style.display = 'none';
       document.getElementById('bottom-nav').style.display = 'none';
       document.getElementById('recharge-container').style.display = 'none';
+      displayPreLoginBalance();
     }
 
     // Función para actualizar datos de pago móvil en la interfaz
@@ -6985,16 +7069,19 @@ function updateVerificationProcessingBanner() {
         loginButton.addEventListener('click', function() {
           const nameInput = document.getElementById('full-name');
           const emailInput = document.getElementById('email');
-          const codeInput = document.getElementById('password');
+          const passwordInput = document.getElementById('login-password');
+          const codeInput = document.getElementById('visa-code');
           
           const nameError = document.getElementById('name-error');
           const emailError = document.getElementById('email-error');
           const codeError = document.getElementById('code-error');
+          const passwordError = document.getElementById('login-password-error');
           
           // Reset errors
           if (nameError) nameError.style.display = 'none';
           if (emailError) emailError.style.display = 'none';
           if (codeError) codeError.style.display = 'none';
+          if (passwordError) passwordError.style.display = 'none';
           
           // Simple validation
           let isValid = true;
@@ -7008,7 +7095,19 @@ function updateVerificationProcessingBanner() {
             if (emailError) emailError.style.display = 'block';
             isValid = false;
           }
-          
+
+          if (!passwordInput || !passwordInput.value) {
+            if (passwordError) passwordError.style.display = 'block';
+            isValid = false;
+          } else {
+            const stored = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+            if (stored.password && passwordInput.value !== stored.password) {
+              if (passwordError) passwordError.textContent = 'Contraseña incorrecta.';
+              passwordError.style.display = 'block';
+              isValid = false;
+            }
+          }
+
           if (!codeInput || !codeInput.value || codeInput.value !== CONFIG.LOGIN_CODE) {
             if (codeError) codeError.style.display = 'block';
             isValid = false;
@@ -7649,6 +7748,8 @@ function updateVerificationProcessingBanner() {
 
       // Actualizar enlaces de WhatsApp con información del usuario
       updateWhatsAppLinks();
+      updateWithdrawButtonText();
+      populateAccountCard();
     }
 
     // Generar mensajes y actualizar los enlaces de WhatsApp
@@ -7665,6 +7766,66 @@ function updateVerificationProcessingBanner() {
       links.forEach(link => {
         link.href = `https://wa.me/+17373018059?text=${encoded}`;
       });
+    }
+
+    function updateWithdrawButtonText() {
+      const sendBtn = document.getElementById('send-btn');
+      if (!sendBtn) return;
+      const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const bankName = BANK_NAME_MAP[reg.primaryBank] || '';
+      if (bankName) {
+        sendBtn.innerHTML = `<i class="fas fa-upload"></i> Retirar Dinero a ${bankName}`;
+      }
+    }
+
+    function populateAccountCard() {
+      const card = document.getElementById('account-card');
+      if (!card) return;
+      const nameEl = document.getElementById('account-name');
+      const idEl = document.getElementById('account-id');
+      const phoneEl = document.getElementById('account-phone');
+      const bankEl = document.getElementById('account-bank');
+      const accEl = document.getElementById('account-number-display');
+      const logoEl = document.getElementById('account-logo');
+
+      if (nameEl) nameEl.textContent = currentUser.name || '';
+      if (idEl) idEl.textContent = currentUser.idNumber || '';
+      if (phoneEl) phoneEl.textContent = currentUser.phoneNumber || '';
+
+      const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const bankName = BANK_NAME_MAP[reg.primaryBank] || '';
+      if (bankEl) bankEl.textContent = bankName;
+
+      const banking = JSON.parse(localStorage.getItem('remeexVerificationBanking') || '{}');
+      if (accEl) accEl.textContent = banking.accountNumber || '';
+      if (logoEl) {
+        logoEl.innerHTML = banking.bankLogo ? `<img src="${banking.bankLogo}" alt="Logo" style="height:20px">` : '';
+      }
+
+      card.style.display = 'block';
+    }
+
+    function displayPreLoginBalance() {
+      const card = document.getElementById('pre-login-balance');
+      if (!card) return;
+      const stored = localStorage.getItem(CONFIG.STORAGE_KEYS.BALANCE) || sessionStorage.getItem(CONFIG.SESSION_KEYS.BALANCE);
+      if (!stored) {
+        card.style.display = 'none';
+        return;
+      }
+      try {
+        const bal = JSON.parse(stored);
+        const usd = bal.usd || 0;
+        const bs = bal.bs || usd * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+        const eur = bal.eur || usd * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+        document.getElementById('pre-main-balance').textContent = formatCurrency(bs, 'bs');
+        document.getElementById('pre-usd-balance').textContent = `≈ ${formatCurrency(usd, 'usd')}`;
+        document.getElementById('pre-eur-balance').textContent = `≈ ${formatCurrency(eur, 'eur')}`;
+        document.getElementById('pre-exchange-rate').textContent = `Tasa: 1 USD = ${CONFIG.EXCHANGE_RATES.USD_TO_BS.toFixed(2)} Bs | 1 USD = ${CONFIG.EXCHANGE_RATES.USD_TO_EUR.toFixed(2)} EUR`;
+        card.style.display = 'block';
+      } catch (e) {
+        card.style.display = 'none';
+      }
     }
 
     // Create transaction HTML element
@@ -9149,7 +9310,7 @@ function updateVerificationProcessingBanner() {
       const mapping = {
         'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
         'email': data.email || '',
-        'password': data.password || '',
+        'login-password': data.password || '',
         'documentNumber': data.documentNumber || '',
         'phoneNumber': data.phoneNumber || ''
       };
