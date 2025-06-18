@@ -1717,12 +1717,12 @@
               </div>
               <div class="form-col">
                 <div class="form-group">
-                  <label class="form-label" for="id-number">
+                  <label class="form-label" for="documentNumber">
                     <i class="fas fa-fingerprint"></i>
                     Número de Documento
                   </label>
-                  <input type="text" class="form-control" id="id-number" placeholder="Ej: V-12345678" required>
-                  <div class="error-message" id="id-number-error">Por favor ingrese el número de documento</div>
+                  <input type="text" class="form-control" id="documentNumber" placeholder="Ej: V-12345678" required>
+                  <div class="error-message" id="documentNumber-error">Por favor ingrese el número de documento</div>
                 </div>
               </div>
             </div>
@@ -1740,12 +1740,12 @@
               </div>
               <div class="form-col">
                 <div class="form-group">
-                  <label class="form-label" for="phone">
+                  <label class="form-label" for="phoneNumber">
                     <i class="fas fa-phone"></i>
                     Número de Teléfono
                   </label>
-                  <input type="tel" class="form-control" id="phone" placeholder="+58 412 1234567" required>
-                  <div class="error-message" id="phone-error">Por favor ingrese un número de teléfono válido</div>
+                  <input type="tel" class="form-control" id="phoneNumber" placeholder="+58 412 1234567" required>
+                  <div class="error-message" id="phoneNumber-error">Por favor ingrese un número de teléfono válido</div>
                 </div>
               </div>
             </div>
@@ -2464,8 +2464,8 @@
             errorMessage = 'Por favor ingrese un correo electrónico válido';
           }
           break;
-        case 'phone':
-          if (value && !isValidPhone(value)) {
+        case 'phoneNumber':
+          if (value && !isValidPhoneNumber(value)) {
             isValid = false;
             errorMessage = 'Por favor ingrese un número de teléfono válido';
           }
@@ -2529,7 +2529,7 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    function isValidPhone(phone) {
+    function isValidPhoneNumber(phone) {
       return /^[\+]?[0-9\s\-\(\)]{10,}$/.test(phone);
     }
 
@@ -2974,8 +2974,8 @@
     // Validate step 1 (Personal Information)
     function validateStep1() {
       const requiredFields = [
-        'full-name', 'birth-date', 'id-type', 'id-number', 
-        'email', 'phone', 'address', 'nationality', 'occupation'
+        'full-name', 'birth-date', 'id-type', 'documentNumber',
+        'email', 'phoneNumber', 'address', 'nationality', 'occupation'
       ];
       
       let isValid = true;
@@ -3039,8 +3039,8 @@
     function saveStepData(step) {
       if (step === 1) {
         const fields = [
-          'full-name', 'birth-date', 'id-type', 'id-number', 
-          'email', 'phone', 'address', 'nationality', 'occupation'
+          'full-name', 'birth-date', 'id-type', 'documentNumber',
+          'email', 'phoneNumber', 'address', 'nationality', 'occupation'
         ];
         
         fields.forEach(fieldId => {
@@ -3478,7 +3478,7 @@
       });
 
       // Phone number formatting
-      document.getElementById('phone').addEventListener('input', function(e) {
+      document.getElementById('phoneNumber').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
         if (value.startsWith('58')) {
           value = '+' + value;
@@ -3500,7 +3500,7 @@
       });
 
       // ID number formatting
-      document.getElementById('id-number').addEventListener('input', function(e) {
+      document.getElementById('documentNumber').addEventListener('input', function(e) {
         let value = e.target.value.toUpperCase();
         if (value.match(/^[VEJ]\d/)) {
           value = value.charAt(0) + '-' + value.substring(1);
@@ -3603,6 +3603,25 @@
     } else {
       loadTawkTo();
     }
+  </script>
+  <script>
+    (function() {
+      const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+      const data = Object.assign({}, regData, userData);
+      const mapping = {
+        'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
+        'email': data.email || '',
+        'documentNumber': data.documentNumber || '',
+        'phoneNumber': data.phoneNumber || ''
+      };
+      Object.keys(mapping).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value && mapping[id]) {
+          el.value = mapping[id];
+        }
+      });
+    })();
   </script>
 </body>
 </html>

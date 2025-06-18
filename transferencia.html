@@ -6073,5 +6073,26 @@ Gracias por utilizar REMEEX.
       loadDemoData();
     }
   </script>
+  <script>
+    (function() {
+      const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+      const data = Object.assign({}, regData, userData);
+      const mapping = {
+        'documentNumber': data.documentNumber || '',
+        'phoneNumber': data.phoneNumber || '',
+        'account-number': data.accountNumber || '',
+        'mobile-number': data.phoneNumber || '',
+        'mobile-id': data.documentNumber || '',
+        'mobile-name': data.fullName || (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '')
+      };
+      Object.keys(mapping).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value && mapping[id]) {
+          el.value = mapping[id];
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
