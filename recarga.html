@@ -7419,7 +7419,7 @@ function updateVerificationProcessingBanner() {
         });
       }
       
-      // Send button - redirige a transferencia.html y comparte datos via sessionStorage
+      // Send button - carga transferencia via AJAX y comparte datos via sessionStorage
       document.querySelectorAll('#send-btn, #success-transfer').forEach(btn => {
         if (btn) {
           btn.addEventListener('click', function(e) {
@@ -7427,13 +7427,17 @@ function updateVerificationProcessingBanner() {
               showToast('error', 'Fondos Insuficientes', 'No tiene fondos suficientes para realizar una transferencia. Por favor recargue su cuenta primero.');
               return;
             }
-            
+
             // Guardar información necesaria en sessionStorage para compartir con transferencia.html
             saveDataForTransfer();
-            
-            // Redirigir a la página de transferencia
-            window.location.href = 'transferencia.html';
-            
+
+            // Cargar la página de transferencia sin recargar
+            if (typeof loadTransferPage === 'function') {
+              loadTransferPage();
+            } else {
+              window.location.href = 'transferencia.html';
+            }
+
             // Reset inactivity timer
             resetInactivityTimer();
           });
@@ -9074,5 +9078,8 @@ function updateVerificationProcessingBanner() {
     // Llamar a esto asegura que todos los valores estén actualizados según la tasa central
     updateExchangeRate(CONFIG.EXCHANGE_RATES.USD_TO_BS);
   </script>
+
+  <div id="transfer-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; z-index:10000;"></div>
+  <script src="spa.js"></script>
 </body>
 </html>
