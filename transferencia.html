@@ -3767,6 +3767,7 @@
     // Variables globales
     let currentUser = {
       name: '',
+      fullName: '',
       email: '',
       balance: {
         usd: 0,
@@ -4432,6 +4433,7 @@
           try {
             const user = JSON.parse(userData);
             currentUser.name = user.name || '';
+            currentUser.fullName = user.fullName || '';
             currentUser.email = user.email || '';
           } catch (e) {
             console.error('Error al parsear datos de usuario:', e);
@@ -6036,6 +6038,7 @@ Gracias por utilizar REMEEX.
         sessionStorage.setItem('remeexSessionBalance', JSON.stringify(currentUser.balance));
         sessionStorage.setItem('remeexSessionUserData', JSON.stringify({
           name: currentUser.name,
+          fullName: currentUser.fullName,
           email: currentUser.email
         }));
         sessionStorage.setItem('remeexVerificationStatus', currentUser.isVerified ? 'verified' : 'unverified');
@@ -6047,6 +6050,7 @@ Gracias por utilizar REMEEX.
       try {
         sessionStorage.setItem(CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify({
           name: currentUser.name,
+          fullName: currentUser.fullName,
           email: currentUser.email
         }));
         

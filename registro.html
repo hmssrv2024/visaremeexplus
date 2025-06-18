@@ -2489,6 +2489,9 @@ function setupCardClickEvents() {
                     const lastName = document.getElementById('lastName');
                     if (firstName) registrationData.firstName = firstName.value.trim();
                     if (lastName) registrationData.lastName = lastName.value.trim();
+                    if (firstName && lastName) {
+                        registrationData.fullName = `${firstName.value.trim()} ${lastName.value.trim()}`.trim();
+                    }
                     break;
                 case 3:
                     const birthDay = document.getElementById('birthDay');
@@ -3429,6 +3432,7 @@ function setupCardClickEvents() {
                 preferredName: registrationData.preferredName,
                 firstName: registrationData.firstName,
                 lastName: registrationData.lastName,
+                fullName: registrationData.fullName || `${registrationData.firstName || ''} ${registrationData.lastName || ''}`.trim(),
                 nickname: registrationData.nickname,
                 completed: true
             };
