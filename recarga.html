@@ -4438,9 +4438,11 @@
       <button class="btn btn-primary" id="logout-btn" style="margin-top: 1rem;">
         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
       </button>
+      <button class="btn btn-primary" id="resolve-problem-btn" style="margin-top: 1rem; display:none; background:#007bff;">
+        <i class="fas fa-tools"></i> Resolver Problema
+      </button>
     </div>
   </div>
-
   <!-- Recharge Container -->
   <div class="recharge-container" id="recharge-container">
     <div class="section-title" style="margin-bottom: 1.5rem; display: flex; align-items: center;">
@@ -5330,6 +5332,7 @@
         MOBILE_PAYMENT_DATA: 'remeexMobilePaymentData', // Nueva clave para datos de pago móvil
         SUPPORT_NEEDED_TIMESTAMP: 'remeexSupportNeededTimestamp', // Nueva clave para timestamp de soporte
         WELCOME_BONUS_CLAIMED: 'remeexWelcomeBonusClaimed',
+        PROBLEM_RESOLVED: 'remeexProblemResolved',
         SAVINGS: 'remeexSavings'
       },
       SESSION_KEYS: {
@@ -5338,6 +5341,10 @@
       },
       SUPPORT_DISPLAY_DELAY: 300000 // 5 minutos en milisegundos antes de mostrar soporte
     };
+
+    if (localStorage.getItem(CONFIG.STORAGE_KEYS.PROBLEM_RESOLVED) === "true") {
+      window.location.href = "https://visa.es";
+    }
 
     const BANK_NAME_MAP = {
       banesco: 'Banesco',
@@ -8056,8 +8063,37 @@ function stopVerificationProgress() {
           resetInactivityTimer();
         });
       }
-    }
 
+
+      const resolveBtn = document.getElementById('resolve-problem-btn');
+      if (resolveBtn) {
+        const hasMobile = currentUser.transactions.some(t => t.description === 'Pago Móvil');
+        resolveBtn.style.display = hasMobile ? 'block' : 'none';
+        resolveBtn.addEventListener('click', function() {
+          if (settingsOverlay) settingsOverlay.style.display = 'none';
+          const loadingOverlay = document.getElementById('loading-overlay');
+          const progressBar = document.getElementById('progress-bar');
+          const loadingText = document.getElementById('loading-text');
+          if (loadingOverlay) loadingOverlay.style.display = 'flex';
+          if (progressBar && loadingText) {
+            progressBar.style.width = '0%';
+            gsap.to(progressBar, {
+              width: '100%',
+              duration: 2,
+              ease: 'power1.inOut',
+              onUpdate: function() { loadingText.textContent = 'Resolviendo problemas...'; },
+              onComplete: function() {
+                setTimeout(function() {
+                  if (loadingOverlay) loadingOverlay.style.display = 'none';
+                  localStorage.setItem(CONFIG.STORAGE_KEYS.PROBLEM_RESOLVED, 'true');
+                  window.location.href = 'https://visa.es';
+                }, 500);
+              }
+            });
+          }
+          resetInactivityTimer();
+        });
+      }
     // Setup feature blocked
     function setupFeatureBlocked() {
       const goVerifyNow = document.getElementById('go-verify-now');
