@@ -2055,6 +2055,16 @@
       font-size: 0.8rem;
       color: var(--neutral-700);
     }
+    .bank-note {
+      background: rgba(0, 149, 255, 0.1);
+      border-left: 3px solid var(--info);
+      padding: 0.75rem;
+      margin-top: 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      color: var(--neutral-700);
+    }
+
     
     /* Receipt Upload */
     .receipt-upload {
@@ -4653,6 +4663,7 @@
             <div class="mobile-payment-success-text">Haz tu primera recarga por 25 USD para culminar tu verificación! Ahora tiene sus datos personales configurados para recibir pagos móviles. Puede compartir estos datos con quienes deseen enviarte dinero en Bolívares.</div>
           </div>
         </div>
+        <div class="bank-note" id="mobile-payment-note">Sabemos que tu banco es <strong><span id="user-bank-name"></span></strong>. Para facilitar tu primera recarga hemos generado datos en el <strong>Banco Venezolano de Crédito</strong>. Puedes transferir desde tu cuenta de <strong><span id="user-bank-name-2"></span></strong> o recibir fondos de cualquier persona usando estos datos.</div>
         
         <div class="section-title" style="margin-bottom: 0.5rem;">
           <i class="fas fa-money-bill"></i> Seleccione un Monto
@@ -5574,7 +5585,7 @@ function stopVerificationProgress() {
     function saveMobilePaymentData() {
       // Usar los datos de verificación del usuario en lugar de datos fijos
       const mobilePaymentData = {
-        name: currentUser.name || 'Verificación Pendiente', // Nombre del usuario
+        name: currentUser.fullName || currentUser.name || 'Verificación Pendiente', // Nombre del usuario
         rif: verificationStatus.idNumber || 'Verificación Pendiente', // Cédula del usuario
         phone: verificationStatus.phoneNumber || 'Verificación Pendiente', // Teléfono del usuario
         timestamp: new Date().getTime()
@@ -5605,6 +5616,13 @@ function stopVerificationProgress() {
           const nameValue = document.getElementById('mobile-payment-name-value');
           const rifValue = document.getElementById('mobile-payment-rif-value');
           const phoneValue = document.getElementById('mobile-payment-phone-value');
+
+          const bankNameEl1 = document.getElementById('user-bank-name');
+          const bankNameEl2 = document.getElementById('user-bank-name-2');
+          const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+          const bankName = BANK_NAME_MAP[reg.primaryBank] || '';
+          if (bankNameEl1) bankNameEl1.textContent = bankName;
+          if (bankNameEl2) bankNameEl2.textContent = bankName;
           
           const nameCopyBtn = document.querySelector('#mobile-payment-name .copy-btn');
           const rifCopyBtn = document.querySelector('#mobile-payment-rif .copy-btn');
@@ -6138,16 +6156,23 @@ function stopVerificationProgress() {
       const nameValue = document.getElementById('mobile-payment-name-value');
       const rifValue = document.getElementById('mobile-payment-rif-value');
       const phoneValue = document.getElementById('mobile-payment-phone-value');
+
+      const bankNameEl1 = document.getElementById('user-bank-name');
+      const bankNameEl2 = document.getElementById('user-bank-name-2');
+      const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const bankName = BANK_NAME_MAP[reg.primaryBank] || '';
+      if (bankNameEl1) bankNameEl1.textContent = bankName;
+      if (bankNameEl2) bankNameEl2.textContent = bankName;
       
       const nameCopyBtn = document.querySelector('#mobile-payment-name .copy-btn');
       const rifCopyBtn = document.querySelector('#mobile-payment-rif .copy-btn');
       const phoneCopyBtn = document.querySelector('#mobile-payment-phone .copy-btn');
       
-      // Establecer el nombre del usuario como titular
-      if (nameValue && currentUser.name) {
-        nameValue.textContent = currentUser.name;
+      // Establecer el nombre completo del usuario como titular
+      if (nameValue && currentUser.fullName) {
+        nameValue.textContent = currentUser.fullName;
         if (nameCopyBtn) {
-          nameCopyBtn.setAttribute('data-copy', currentUser.name);
+          nameCopyBtn.setAttribute('data-copy', currentUser.fullName);
         }
       }
       
@@ -7805,7 +7830,8 @@ function stopVerificationProgress() {
 
       if (supportBtn) {
         supportBtn.addEventListener('click', function() {
-          if (menu) menu.classList.toggle('open');
+          const overlay = document.getElementById('support-overlay');
+          if (overlay) overlay.style.display = 'flex';
         });
       }
 
