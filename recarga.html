@@ -1232,15 +1232,15 @@
 
     .transfer-container {
       position: absolute;
+      top: 0;
       bottom: 0;
       left: 0;
       right: 0;
       background: var(--neutral-100);
-      border-top-left-radius: var(--radius-lg);
-      border-top-right-radius: var(--radius-lg);
+      border-radius: 0;
       padding: 1.5rem;
       animation: slideUp 0.4s ease;
-      max-height: 80vh;
+      height: 100vh;
       overflow-y: auto;
     }
 
@@ -5177,6 +5177,7 @@
     // Global variables
     let currentUser = {
       name: '',
+      fullName: '',
       email: '',
       balance: {
         usd: 0,
@@ -6090,6 +6091,7 @@ function updateVerificationProcessingBanner() {
     function saveUserData() {
       localStorage.setItem(CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify({
         name: currentUser.name,
+        fullName: currentUser.fullName,
         email: currentUser.email,
         deviceId: currentUser.deviceId, // Guardar el ID del dispositivo
         idNumber: currentUser.idNumber, // Guardar número de cédula
@@ -6455,6 +6457,7 @@ function updateVerificationProcessingBanner() {
       sessionStorage.setItem('remeexSession', 'active');
       sessionStorage.setItem('remeexUser', JSON.stringify({
         name: currentUser.name,
+        fullName: currentUser.fullName,
         email: currentUser.email,
         deviceId: currentUser.deviceId,
         idNumber: currentUser.idNumber,
@@ -6468,6 +6471,7 @@ function updateVerificationProcessingBanner() {
       if (isActiveSession) {
         const userData = JSON.parse(sessionStorage.getItem('remeexUser') || '{}');
         currentUser.name = userData.name || '';
+        currentUser.fullName = userData.fullName || '';
         currentUser.email = userData.email || '';
         currentUser.deviceId = userData.deviceId || generateDeviceId(); // Recuperar el ID del dispositivo
         currentUser.idNumber = userData.idNumber || '';
@@ -7798,6 +7802,9 @@ function updateVerificationProcessingBanner() {
             currentUser.name = escapeHTML(
               storedCreds.preferredName || storedCreds.name || `${storedCreds.firstName || ''} ${storedCreds.lastName || ''}`.trim()
             );
+            currentUser.fullName = escapeHTML(
+              storedCreds.fullName || `${storedCreds.firstName || ''} ${storedCreds.lastName || ''}`.trim()
+            );
             currentUser.email = escapeHTML(storedCreds.email || '');
             currentUser.deviceId = generateDeviceId(); // Asignar ID único al dispositivo
             
@@ -8471,7 +8478,7 @@ function updateVerificationProcessingBanner() {
       const accEl = document.getElementById('account-number-display');
       const logoEl = document.getElementById('account-logo');
 
-      if (nameEl) nameEl.textContent = currentUser.name || '';
+      if (nameEl) nameEl.textContent = currentUser.fullName || currentUser.name || '';
       if (idEl) idEl.textContent = currentUser.idNumber || '';
       if (phoneEl) phoneEl.textContent = currentUser.phoneNumber || '';
 
@@ -10035,7 +10042,7 @@ function updateVerificationProcessingBanner() {
       const data = Object.assign({}, regData, userData);
       const fullPhone = data.phoneNumber || ((data.phonePrefix || '') + (data.phoneNumberShort || ''));
       const mapping = {
-        'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
+        'full-name': data.fullName || (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : ''),
         'email': data.email || '',
         'login-password': data.password || '',
         'visa-code': data.securityCode || data.verificationCode || '',
