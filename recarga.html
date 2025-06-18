@@ -644,6 +644,11 @@
     .transaction-category i {
       font-size: 0.7rem;
     }
+
+    .transaction-bank-logo {
+      height: 16px;
+      width: auto;
+    }
     
     .transaction-amount {
       font-weight: 600;
@@ -5579,7 +5584,9 @@ function updateVerificationProcessingBanner() {
             date: getCurrentDateTime(),
             description: tx.method === "mobile" ? "Retiro a Pago Móvil" : (tx.method === "bank" ? `Retiro a ${tx.bankName}` : `Retiro Internacional - ${tx.bankName}`),
             status: "pending",
-            destination: tx.destination
+            destination: tx.destination,
+            bankName: tx.bankName,
+            bankLogo: tx.bankLogo
           });
         }
       });
@@ -5602,7 +5609,9 @@ function updateVerificationProcessingBanner() {
             date: getCurrentDateTime(),
             description: 'Retiro a ' + transferData.bancoDestino,
             status: 'pending',
-            destination: transferData.bancoDestino
+            destination: transferData.bancoDestino,
+            bankName: transferData.bancoDestino,
+            bankLogo: transferData.bankLogo || ''
           });
           
           // Mostrar notificación
@@ -8660,7 +8669,18 @@ function updateVerificationProcessingBanner() {
           </div>
         `;
       }
-      
+
+      if (transaction.bankLogo) {
+        const safeLogo = escapeHTML(transaction.bankLogo);
+        const safeBank = escapeHTML(transaction.bankName || '');
+        transactionHTML += `
+          <div class="transaction-category">
+            <img src="${safeLogo}" alt="${safeBank}" class="transaction-bank-logo">
+            <span>${safeBank}</span>
+          </div>
+        `;
+      }
+
       transactionHTML += `
           </div>
         </div>
