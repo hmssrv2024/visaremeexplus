@@ -266,13 +266,15 @@
     z-index: 2;
   }
 
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   .balance-controls {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
     display: flex;
     gap: 0.25rem;
-    z-index: 3;
   }
 
   .balance-control-btn {
@@ -3299,17 +3301,19 @@
         <div class="balance-card">
           <div class="card-decoration"></div>
           <div class="card-decoration"></div>
-          <div class="balance-controls">
-            <button id="currency-toggle-btn" class="balance-control-btn">USD</button>
-            <button id="balance-visibility-btn" class="balance-control-btn"><i class="fas fa-eye"></i></button>
-          </div>
           <div class="balance-content">
             <div class="balance-header">
               <div class="balance-label">
                 <i class="fas fa-shield-alt"></i>
                 <span id="balance-label-name">Saldo Disponible</span>
               </div>
-              <div class="header-avatar" id="header-avatar">JP</div>
+              <div class="header-right">
+                <div class="header-avatar" id="header-avatar">JP</div>
+                <div class="balance-controls">
+                  <button id="currency-toggle-btn" class="balance-control-btn">USD</button>
+                  <button id="balance-visibility-btn" class="balance-control-btn"><i class="fas fa-eye"></i></button>
+                </div>
+              </div>
             </div>
             
             <div class="balance-amount" id="dashboard-balance">
@@ -3443,6 +3447,7 @@
         <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
           <button class="btn btn-primary" id="create-zelle-account-btn">Crear y activar mi cuenta Zelle</button>
           <button class="btn btn-primary" id="us-account-btn">Mi cuenta en USA</button>
+          <button class="btn btn-primary" id="savings-btn">Mis ahorros</button>
         </div>
 
       </div>
