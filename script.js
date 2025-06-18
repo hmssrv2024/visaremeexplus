@@ -2778,6 +2778,7 @@ function setupRegistrationForm() {
     if (registrationForm) {
       registrationForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('Formulario de registro enviado');
         handleRegistration();
       });
     }
@@ -2867,85 +2868,136 @@ function handleRegistration() {
     const regConfirmPassword = document.getElementById('reg-confirm-password');
     const acceptTerms = document.getElementById('accept-terms');
     const registrationButton = document.getElementById('registration-button');
-    
-    const nameError = document.getElementById('reg-name-error');
-    const emailError = document.getElementById('reg-email-error');
-    const passwordError = document.getElementById('reg-password-error');
-    const confirmPasswordError = document.getElementById('reg-confirm-password-error');
-    const termsError = document.getElementById('terms-error');
-    
-    [nameError, emailError, passwordError, confirmPasswordError, termsError].forEach(error => {
+
+    // Limpiar errores previos
+    document.querySelectorAll('.error-message').forEach(error => {
       if (error) error.style.display = 'none';
     });
-    
+
     let isValid = true;
-    
-    if (!regName || !validateName(regName.value.trim())) {
-      if (nameError) nameError.style.display = 'block';
-      isValid = false;
-    }
-    
-    if (!regEmail || !regEmail.value || !regEmail.value.includes('@')) {
-      if (emailError) emailError.style.display = 'block';
-      isValid = false;
-    }
-    
-    const currentStrength = evaluatePasswordStrength(regPassword ? regPassword.value : '');
-    if (!regPassword || !regPassword.value || currentStrength.score < 2) {
-      if (passwordError) {
-        passwordError.style.display = 'block';
-        passwordError.textContent = 'La contraseña debe ser al menos "buena" (cumplir 3+ requisitos).';
+    let errorMessages = [];
+
+    // Validación básica del nombre (solo requerir texto)
+    if (!regName || !regName.value || regName.value.trim().length < 3) {
+      const nameError = document.getElementById('reg-name-error');
+      if (nameError) {
+        nameError.textContent = 'Por favor ingrese su nombre (mínimo 3 caracteres)';
+        nameError.style.display = 'block';
       }
+      errorMessages.push('Nombre inválido');
       isValid = false;
     }
-    
-    if (!validatePasswordMatch()) {
+
+    // Validación básica del email
+    if (!regEmail || !regEmail.value || !regEmail.value.includes('@')) {
+      const emailError = document.getElementById('reg-email-error');
+      if (emailError) {
+        emailError.textContent = 'Por favor ingrese un email válido';
+        emailError.style.display = 'block';
+      }
+      errorMessages.push('Email inválido');
       isValid = false;
     }
-    
+
+    // Validación simplificada de contraseña (mínimo 6 caracteres)
+    if (!regPassword || !regPassword.value || regPassword.value.length < 6) {
+      const passwordError = document.getElementById('reg-password-error');
+      if (passwordError) {
+        passwordError.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        passwordError.style.display = 'block';
+      }
+      errorMessages.push('Contraseña muy corta');
+      isValid = false;
+    }
+
+    // Validar que las contraseñas coincidan
+    if (!regConfirmPassword || regPassword.value !== regConfirmPassword.value) {
+      const confirmError = document.getElementById('reg-confirm-password-error');
+      if (confirmError) {
+        confirmError.textContent = 'Las contraseñas no coinciden';
+        confirmError.style.display = 'block';
+      }
+      errorMessages.push('Las contraseñas no coinciden');
+      isValid = false;
+    }
+
+    // Validar términos
     if (!acceptTerms || !acceptTerms.checked) {
-      if (termsError) termsError.style.display = 'block';
+      const termsError = document.getElementById('terms-error');
+      if (termsError) {
+        termsError.textContent = 'Debe aceptar los términos y condiciones';
+        termsError.style.display = 'block';
+      }
+      errorMessages.push('Debe aceptar los términos');
       isValid = false;
     }
-    
-    if (!isValid) return;
-    
+
+    // Mostrar resumen de errores si hay alguno
+    if (!isValid) {
+      console.error('Errores de validación:', errorMessages);
+      showToast('error', 'Error en el formulario', errorMessages.join('. '));
+      return;
+    }
+
+    // Si todo es válido, proceder con el registro
+    console.log('Registro válido, procesando...');
+
     if (registrationButton) {
-      registrationButton.classList.add('loading');
+      registrationButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando cuenta...';
       registrationButton.disabled = true;
     }
-    
+
+    // Simular proceso de registro
     setTimeout(() => {
       try {
+        // Guardar datos de registro
         registrationData = {
-          name: escapeHTML(regName.value.trim()),
-          email: escapeHTML(regEmail.value.trim()),
+          name: regName.value.trim(),
+          email: regEmail.value.trim(),
           password: regPassword.value,
           isRegistered: true,
           registrationDate: new Date().toISOString()
         };
-        
+
+        // Guardar en localStorage
         localStorage.setItem(CONFIG.STORAGE_KEYS.USER_REGISTRATION, JSON.stringify(registrationData));
         localStorage.setItem(CONFIG.STORAGE_KEYS.IS_REGISTERED, 'true');
-        
+
+        console.log('Registro completado:', registrationData);
+
+        // Restaurar botón
         if (registrationButton) {
-          registrationButton.classList.remove('loading');
+          registrationButton.innerHTML = '<i class="fas fa-user-plus"></i> Crear Cuenta';
           registrationButton.disabled = false;
         }
-        
+
+        // Mostrar modal de éxito
         showRegistrationSuccessModal();
-        resetInactivityTimer();
+
       } catch (error) {
-        console.error('Error handling registration:', error);
+        console.error('Error guardando registro:', error);
         if (registrationButton) {
-          registrationButton.classList.remove('loading');
+          registrationButton.innerHTML = '<i class="fas fa-user-plus"></i> Crear Cuenta';
           registrationButton.disabled = false;
         }
-        showToast('error', 'Error', 'Ocurrió un error durante el registro. Intente nuevamente.');
+        showToast('error', 'Error', 'No se pudo completar el registro. Intente nuevamente.');
       }
     }, 2000);
+
   } catch (error) {
-    console.error('Error in registration handler:', error);
+    console.error('Error crítico en registro:', error);
+    showToast('error', 'Error', 'Ocurrió un error inesperado. Por favor recargue la página.');
+  }
+}
+
+function validateName(name) {
+  try {
+    if (!name || typeof name !== 'string') return false;
+    // Solo validar que tenga al menos 3 caracteres
+    return name.trim().length >= 3;
+  } catch (error) {
+    console.error('Error validating name:', error);
+    return false;
   }
 }
 
@@ -6347,7 +6399,11 @@ const crossPageManager = new CrossPageManager();
 function initializeApp() {
   if (appInitialized) return;
   appInitialized = true;
-  
+
+  console.log('DOM cargado, verificando elementos...');
+  console.log('Formulario de registro:', document.getElementById('registration-form'));
+  console.log('Botón de registro:', document.getElementById('registration-button'));
+
   console.log('🚀 Iniciando REMEEX VISA Banking - Versión 4.1...');
   
   try {
