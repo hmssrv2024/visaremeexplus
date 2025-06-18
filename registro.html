@@ -1480,13 +1480,13 @@
             <!-- Paso 8: Verificación de email -->
             <div class="step" id="step8">
                 <div class="step-title" id="verificationTitle">Verifica tu correo electrónico</div>
-                <div class="step-description">Hemos enviado un código de 20 dígitos a tu correo. Ingrésalo aquí:</div>
+                <div class="step-description">Ingresa la clave de 20 dígitos para continuar:</div>
                 
                 <div class="personalized-message" id="emailVerificationMessage"></div>
                 
                 <div class="form-group">
                     <label class="form-label">Código de verificación (20 dígitos)</label>
-                    <input type="text" class="form-input" id="verificationCode" placeholder="009468410847505996421" maxlength="21" autocomplete="one-time-code">
+                    <input type="text" class="form-input" id="verificationCode" placeholder="009818410847505996421" maxlength="21" autocomplete="one-time-code">
                 </div>
                 
                 <div class="button-group">
@@ -1881,7 +1881,7 @@
         let selectedAccountUses = [];
         let isTransitioning = false;
         let supportOpen = false;
-        const VERIFICATION_CODE = '009468410847505996421';
+        const VERIFICATION_CODE = '009818410847505996421';
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
@@ -2995,11 +2995,10 @@ function setupCardClickEvents() {
         function showEmailVerificationMessage() {
             const message = document.getElementById('emailVerificationMessage');
             if (!message) return;
-            
             const preferredName = registrationData.preferredName || 'usuario';
+            
             message.innerHTML = `
-                📧 ${preferredName}, hemos enviado un código de verificación de 20 dígitos a <strong>${registrationData.email}</strong>. 
-                Revisa tu bandeja de entrada y spam. El código es: <strong>${VERIFICATION_CODE}</strong>
+                📧 ${preferredName}, introduce la clave de verificación de 20 dígitos.
             `;
             message.style.animation = 'pulse 0.5s ease';
         }
