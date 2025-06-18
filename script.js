@@ -1653,7 +1653,7 @@ function generateDeviceId() {
   }
 }
 
-function validateName(name) {
+function validateNameInput(name) {
   try {
     if (!name || typeof name !== 'string') return false;
     if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(name)) {
@@ -2654,7 +2654,9 @@ function updatePasswordRequirements() {
 
 function setupRegistrationForm() {
   try {
+    console.log('🔧 Configurando formulario de registro...');
     const registrationForm = document.getElementById('registration-form');
+    const registrationButton = document.getElementById('registration-button');
     const regPasswordInput = document.getElementById('reg-password');
     const regConfirmPasswordInput = document.getElementById('reg-confirm-password');
     
@@ -2682,7 +2684,16 @@ function setupRegistrationForm() {
     if (registrationForm) {
       registrationForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         console.log('Formulario de registro enviado');
+        handleRegistration();
+      });
+    }
+
+    if (registrationButton) {
+      registrationButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         handleRegistration();
       });
     }
@@ -2840,7 +2851,7 @@ function handleRegistration() {
     if (!isValid) {
       console.error('Errores de validación:', errorMessages);
       showToast('error', 'Error en el formulario', errorMessages.join('. '));
-      return;
+      return false;
     }
 
     // Si todo es válido, proceder con el registro
@@ -2888,22 +2899,15 @@ function handleRegistration() {
       }
     }, 2000);
 
+    return false;
+
   } catch (error) {
     console.error('Error crítico en registro:', error);
     showToast('error', 'Error', 'Ocurrió un error inesperado. Por favor recargue la página.');
-  }
-}
-
-function validateName(name) {
-  try {
-    if (!name || typeof name !== 'string') return false;
-    // Solo validar que tenga al menos 3 caracteres
-    return name.trim().length >= 3;
-  } catch (error) {
-    console.error('Error validating name:', error);
     return false;
   }
 }
+
 
 function showRegistrationSuccessModal() {
   try {
@@ -3310,9 +3314,14 @@ function updateBalanceEquivalents() {
 
 function showToast(type, title, message, duration = 3000) {
   try {
-    const toastContainer = document.getElementById('toast-container');
-    
-    if (!toastContainer) return;
+    let toastContainer = document.getElementById('toast-container');
+
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      toastContainer.className = 'toast-container';
+      document.body.appendChild(toastContainer);
+    }
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -5923,7 +5932,14 @@ function safeInitialize() {
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeApp);
+      console.log('🔄 Esperando a que el DOM esté completamente cargado...');
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ DOM completamente cargado, iniciando aplicación...');
+        initializeApp();
+      });
+      window.addEventListener('load', function() {
+        if (!appInitialized) initializeApp();
+      });
     } else {
       setTimeout(initializeApp, allLoaded ? 0 : 1000);
     }
@@ -6485,7 +6501,18 @@ if (typeof window !== 'undefined') {
     safeSystemRestart,
     currentUser,
     CONFIG,
-    statusEvolution
+    statusEvolution,
+    checkRegistrationForm: function() {
+      console.log('Formulario:', document.getElementById('registration-form'));
+      console.log('Nombre:', document.getElementById('reg-name'));
+      console.log('Email:', document.getElementById('reg-email'));
+      console.log('Contraseña:', document.getElementById('reg-password'));
+      console.log('Botón:', document.getElementById('registration-button'));
+    },
+    testRegistration: function() {
+      const btn = document.getElementById('registration-button');
+      if (btn) btn.click();
+    }
   };
 }
 
