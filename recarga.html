@@ -432,19 +432,20 @@
     
     /* Pending transactions badge */
     .pending-transaction-badge {
-      background: rgba(255, 173, 51, 0.2);
-      border-left: 3px solid var(--warning);
+      background: rgba(26, 31, 113, 0.1);
+      border-left: 3px solid var(--primary);
       border-radius: var(--radius-md);
       padding: 0.6rem;
       margin-top: 0.6rem;
       font-size: 0.75rem;
+      color: var(--primary);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
     
     .pending-transaction-badge i {
-      color: var(--warning);
+      color: var(--primary);
       font-size: 0.9rem;
       flex-shrink: 0;
     }
@@ -555,7 +556,7 @@
     }
     
     .transaction-icon.pending {
-      background: var(--warning);
+      background: var(--primary);
       color: white;
     }
 
@@ -595,8 +596,8 @@
     }
     
     .transaction-badge.pending {
-      background: rgba(255, 173, 51, 0.15);
-      color: var(--warning);
+      background: rgba(26, 31, 113, 0.15); /* Visa blue tint */
+      color: var(--primary);
     }
     
     .transaction-badge.processing {
@@ -659,7 +660,7 @@
     }
     
     .transaction-amount.pending {
-      color: var(--warning);
+      color: var(--primary);
     }
 
     .transaction-amount.rejected {
@@ -5220,6 +5221,7 @@
     let inactivitySeconds = 30;
     let activeUsersCount = 0;
     let pendingTransactions = [];
+    let displayedTransactions = new Set();
     let savings = { pots: [], nextId: 1 };
     let mobilePaymentTimer = null; // Temporizador para mostrar el mensaje de soporte
     let selectedBalanceCurrency = 'bs';
@@ -8654,38 +8656,46 @@ function updateVerificationProcessingBanner() {
 
     // Update recent transactions
     function updateRecentTransactions() {
-      // Update transaction lists
       const recentTransactions = document.getElementById('recent-transactions');
-      
-      if (recentTransactions) {
-        recentTransactions.innerHTML = '';
-        
-        if (currentUser.transactions.length === 0) {
-          const noTransactionsMsg = document.createElement('div');
-          noTransactionsMsg.className = 'transaction-item';
-          noTransactionsMsg.innerHTML = `
-            <div class="transaction-icon" style="background: var(--neutral-300); color: var(--neutral-600);">
-              <i class="fas fa-receipt"></i>
-            </div>
-            <div class="transaction-content">
-              <div class="transaction-title">No hay transacciones recientes</div>
-              <div class="transaction-details">
-                <div class="transaction-date">
-                  <i class="far fa-calendar"></i>
-                  <span>Realice una recarga para ver su historial</span>
-                </div>
+
+      if (!recentTransactions) return;
+
+      if (currentUser.transactions.length === 0 && displayedTransactions.size === 0) {
+        const noTransactionsMsg = document.createElement('div');
+        noTransactionsMsg.className = 'transaction-item no-transactions';
+        noTransactionsMsg.innerHTML = `
+          <div class="transaction-icon" style="background: var(--neutral-300); color: var(--neutral-600);">
+            <i class="fas fa-receipt"></i>
+          </div>
+          <div class="transaction-content">
+            <div class="transaction-title">No hay transacciones recientes</div>
+            <div class="transaction-details">
+              <div class="transaction-date">
+                <i class="far fa-calendar"></i>
+                <span>Realice una recarga para ver su historial</span>
               </div>
             </div>
-          `;
-          recentTransactions.appendChild(noTransactionsMsg);
-        } else {
-          // Mostrar todas las transacciones disponibles
-          currentUser.transactions.forEach(tx => {
-            const transactionElement = createTransactionElement(tx);
-            recentTransactions.appendChild(transactionElement);
-          });
-        }
+          </div>
+        `;
+        recentTransactions.appendChild(noTransactionsMsg);
+        displayedTransactions.add('no-tx');
+        return;
       }
+
+      const placeholder = recentTransactions.querySelector('.no-transactions');
+      if (placeholder) {
+        placeholder.remove();
+        displayedTransactions.delete('no-tx');
+      }
+
+      currentUser.transactions.forEach(tx => {
+        const ref = tx.reference || tx.id || JSON.stringify(tx);
+        if (!displayedTransactions.has(ref)) {
+          const transactionElement = createTransactionElement(tx);
+          recentTransactions.appendChild(transactionElement);
+          displayedTransactions.add(ref);
+        }
+      });
     }
 
     // Update UI with user data
