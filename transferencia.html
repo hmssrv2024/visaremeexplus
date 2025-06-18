@@ -6075,7 +6075,18 @@ Gracias por utilizar REMEEX.
       const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
       const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
       const data = Object.assign({}, regData, userData);
-      const fullPhone = data.phoneNumber || ((data.phonePrefix || '') + (data.phoneNumberShort || ''));
+      let fullPhone = '';
+      if (data.phoneNumberFull) {
+        fullPhone = data.phoneNumberFull;
+      } else if (data.fullPhoneNumber) {
+        fullPhone = data.fullPhoneNumber;
+      } else if (data.phonePrefix && data.phoneNumber) {
+        fullPhone = data.phonePrefix + data.phoneNumber;
+      } else if (data.phoneNumber) {
+        fullPhone = data.phoneNumber;
+      } else {
+        fullPhone = (data.phonePrefix || '') + (data.phoneNumberShort || '');
+      }
       const mapping = {
         'documentNumber': data.documentNumber || '',
         'phoneNumber': fullPhone,
