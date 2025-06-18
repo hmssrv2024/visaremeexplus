@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+  <script src="bank-data.js"></script>
 
   <style>
     :root {
@@ -1630,6 +1631,14 @@
     .account-info div {
       font-size: 0.8rem;
       margin-bottom: 0.25rem;
+    }
+
+    #account-logo {
+      margin-top: 0.5rem;
+    }
+
+    #account-logo img {
+      height: 40px;
     }
     
     .btn {
@@ -8495,7 +8504,11 @@ function updateVerificationProcessingBanner() {
         }
       }
       if (logoEl) {
-        logoEl.innerHTML = banking.bankLogo ? `<img src="${banking.bankLogo}" alt="Logo" style="height:20px">` : '';
+        let logoUrl = banking.bankLogo;
+        if (!logoUrl) {
+          logoUrl = reg.primaryBankLogo || (typeof getBankLogo === 'function' ? getBankLogo(reg.primaryBank) : '');
+        }
+        logoEl.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Logo Banco">` : '';
       }
 
       card.style.display = 'block';
