@@ -1244,6 +1244,35 @@
       font-size: 0.9rem;
     }
 
+    .history-title {
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+
+    .exchange-history {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+    }
+
+    .history-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--neutral-300);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-date {
+      font-size: 0.7rem;
+      color: var(--neutral-600);
+    }
+
+    .no-history {
+      text-align: center;
+      color: var(--neutral-600);
+    }
+
     /* Transfer Overlay */
     .transfer-overlay {
       position: fixed;
@@ -1467,6 +1496,19 @@
       font-size: 0.9rem;
     }
 
+    .pot-progress {
+      height: 6px;
+      background: var(--neutral-300);
+      border-radius: var(--radius-full);
+      margin: 0.25rem 0;
+      overflow: hidden;
+    }
+
+    .pot-progress-bar {
+      height: 100%;
+      background: var(--success);
+    }
+
     .savings-actions button {
       margin-left: 0.5rem;
       border-radius: var(--radius-md);
@@ -1663,9 +1705,22 @@
       color: var(--neutral-600);
     }
 
+    .account-info {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 0.5rem;
+      row-gap: 0.25rem;
+    }
+
     .account-info div {
       font-size: 0.8rem;
-      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .account-info i {
+      margin-right: 0.35rem;
+      color: var(--primary);
     }
 
     #account-logo {
@@ -1692,6 +1747,13 @@
 
     .limit-value {
       font-weight: 600;
+    }
+
+    .account-balance {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
     }
     
     .btn {
@@ -3926,12 +3988,17 @@
           <i class="fas fa-id-card"></i> Mi Cuenta
         </div>
       <div class="account-info">
-        <div><strong>Nombre:</strong> <span id="account-name"></span></div>
-        <div><strong>Cédula:</strong> <span id="account-id"></span></div>
-        <div><strong>Teléfono:</strong> <span id="account-phone"></span></div>
-        <div><strong>Banco:</strong> <span id="account-bank"></span></div>
-        <div><strong>Número de Cuenta:</strong> <span id="account-number-display"></span></div>
+        <div><i class="fas fa-user"></i><strong> Nombre:</strong> <span id="account-name"></span></div>
+        <div><i class="far fa-id-card"></i><strong> Cédula:</strong> <span id="account-id"></span></div>
+        <div><i class="fas fa-phone"></i><strong> Teléfono:</strong> <span id="account-phone"></span></div>
+        <div><i class="fas fa-university"></i><strong> Banco:</strong> <span id="account-bank"></span></div>
+        <div><i class="fas fa-hashtag"></i><strong> Número de Cuenta:</strong> <span id="account-number-display"></span></div>
         <div id="account-logo"></div>
+      </div>
+      <div class="account-balance">
+        <div><strong>USD:</strong> <span id="account-balance-usd"></span></div>
+        <div><strong>Bs:</strong> <span id="account-balance-bs"></span></div>
+        <div><strong>EUR:</strong> <span id="account-balance-eur"></span></div>
       </div>
       <div class="account-limits">
         <div class="limit-info">
@@ -4085,6 +4152,8 @@
         <button class="btn btn-primary" id="request-money-btn">Solicitar</button>
         <div class="exchange-status" id="request-status"></div>
       </div>
+      <h4 class="history-title">Historial Reciente</h4>
+      <div class="exchange-history" id="exchange-history"></div>
     </div>
   </div>
 
@@ -5355,6 +5424,7 @@
     let pendingTransactions = [];
     let displayedTransactions = new Set();
     let savings = { pots: [], nextId: 1 };
+    let exchangeHistory = [];
     let mobilePaymentTimer = null; // Temporizador para mostrar el mensaje de soporte
     let selectedBalanceCurrency = 'bs';
     let isBalanceHidden = false;
@@ -5940,6 +6010,7 @@ function stopVerificationProgress() {
         loadVerificationStatus();
         loadCardData();
         loadSavingsData();
+        loadExchangeHistory();
         loadFirstRechargeStatus();
         loadWelcomeBonusStatus();
         loadMobilePaymentData();
@@ -5969,6 +6040,7 @@ function stopVerificationProgress() {
       }
 
       loadSavingsData();
+      loadExchangeHistory();
       updateSavingsUI();
       
       // Cargar estado de verificación
@@ -6350,7 +6422,12 @@ function stopVerificationProgress() {
         try {
           const data = JSON.parse(saved);
           if (data.deviceId && data.deviceId === currentUser.deviceId) {
-            savings.pots = data.pots || [];
+            savings.pots = (data.pots || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              balance: p.balance || 0,
+              goal: p.goal || 0
+            }));
             savings.nextId = data.nextId || 1;
             return true;
           }
@@ -6360,10 +6437,39 @@ function stopVerificationProgress() {
     }
 
     function createSavingsPot(name) {
-      const pot = { id: savings.nextId++, name: name, balance: 0 };
+      const goal = parseFloat(prompt('Meta de ahorro (USD):','1000')) || 0;
+      const pot = { id: savings.nextId++, name: name, balance: 0, goal: goal };
       savings.pots.push(pot);
       saveSavingsData();
       updateSavingsUI();
+    }
+
+    function saveExchangeHistory() {
+      localStorage.setItem('remeexExchangeHistory', JSON.stringify(exchangeHistory));
+    }
+
+    function loadExchangeHistory() {
+      const data = localStorage.getItem('remeexExchangeHistory');
+      if (data) {
+        try { exchangeHistory = JSON.parse(data); } catch(e) { exchangeHistory = []; }
+      }
+    }
+
+    function renderExchangeHistory() {
+      const container = document.getElementById('exchange-history');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!exchangeHistory.length) {
+        container.innerHTML = '<div class="no-history">Sin operaciones recientes</div>';
+        return;
+      }
+      exchangeHistory.slice(-5).reverse().forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        const typeText = h.type === 'send' ? 'Enviado' : 'Recibido';
+        div.innerHTML = `<strong>${typeText}</strong> ${formatCurrency(h.amount,'usd')} - ${escapeHTML(h.email)} <div class="history-date">${h.date}</div>`;
+        container.appendChild(div);
+      });
     }
 
     function depositToPot(id, amount) {
@@ -6427,7 +6533,10 @@ function stopVerificationProgress() {
       savings.pots.forEach(pot => {
         const div = document.createElement('div');
         div.className = 'savings-pot';
-        div.innerHTML = `<div><strong>${escapeHTML(pot.name)}</strong><br>${formatCurrency(pot.balance,'usd')}</div>`+
+        const progress = pot.goal ? (pot.balance / pot.goal * 100).toFixed(0) : 0;
+        div.innerHTML = `<div><strong>${escapeHTML(pot.name)}</strong><br>`+
+          `${formatCurrency(pot.balance,'usd')} / ${formatCurrency(pot.goal,'usd')}`+
+          `<div class="pot-progress"><div class="pot-progress-bar" style="width:${progress}%"></div></div></div>`+
           `<div class="savings-actions">`+
           `<button class="btn btn-outline" data-action="deposit" data-id="${pot.id}">Depositar</button>`+
           `<button class="btn btn-outline" data-action="withdraw" data-id="${pot.id}">Retirar</button>`+
@@ -7739,6 +7848,7 @@ function stopVerificationProgress() {
       if (exchangeItem) {
         exchangeItem.addEventListener('click', function() {
           if (exchangeOverlay) exchangeOverlay.style.display = 'flex';
+          renderExchangeHistory();
           resetInactivityTimer();
         });
       }
@@ -7800,10 +7910,14 @@ function stopVerificationProgress() {
             description: 'Envío a Patrick Alistair D\u00B4Lavangart Kors',
             status: 'completed'
           });
+          exchangeHistory.push({type:'send', email: email, amount: amount, date: getCurrentDateTime()});
+          saveExchangeHistory();
+          renderExchangeHistory();
           sendStatus.innerHTML = '<div class="spinner"></div>Código para Patrick: <strong>454132A</strong>';
           localStorage.setItem('remeexExchangeSendDone','1');
           setTimeout(() => {
             sendStatus.textContent = 'Enviado exitosamente.';
+            renderExchangeHistory();
           }, 180000);
         });
       }
@@ -7843,9 +7957,12 @@ function stopVerificationProgress() {
               description: 'Recibido de Patrick Alistair D\u00B4Lavangart Kors',
               status: 'completed'
             });
+            exchangeHistory.push({type:'request', email: email, amount: amt, date: getCurrentDateTime()});
+            saveExchangeHistory();
             requestStatus.textContent = 'Monto acreditado.';
             localStorage.setItem('remeexExchangeRequestDone','1');
             localStorage.removeItem('exchangeRequestedAmount');
+            renderExchangeHistory();
           } else {
             requestStatus.textContent = 'Código incorrecto.';
           }
@@ -8723,6 +8840,13 @@ function stopVerificationProgress() {
         }
         logoEl.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Logo Banco">` : '';
       }
+
+      const balUsd = document.getElementById('account-balance-usd');
+      const balBs = document.getElementById('account-balance-bs');
+      const balEur = document.getElementById('account-balance-eur');
+      if (balUsd) balUsd.textContent = formatCurrency(currentUser.balance.usd,'usd');
+      if (balBs) balBs.textContent = formatCurrency(currentUser.balance.bs,'bs');
+      if (balEur) balEur.textContent = formatCurrency(currentUser.balance.eur,'eur');
 
       const slider = document.getElementById('limit-slider');
       const limitValue = document.getElementById('limit-value');
