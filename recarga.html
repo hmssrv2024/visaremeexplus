@@ -4201,6 +4201,12 @@
           <input type="text" class="form-control" id="mobile-reference-number" placeholder="Ingrese el número de referencia del pago móvil" aria-describedby="mobile-reference-error">
           <div class="error-message" id="mobile-reference-error">Por favor, ingrese un número de referencia válido.</div>
         </div>
+
+        <div class="form-group reference-number">
+          <label class="form-label" for="mobile-concept">Concepto indicado</label>
+          <input type="text" class="form-control" id="mobile-concept" placeholder="Ej: 4454651" aria-describedby="mobile-concept-error">
+          <div class="error-message" id="mobile-concept-error">Por favor, ingrese el concepto utilizado.</div>
+        </div>
         
         <button class="btn btn-primary" id="submit-mobile-payment" disabled style="margin-top: 1.5rem;">
           <i class="fas fa-paper-plane"></i> Seleccione un monto
@@ -4469,6 +4475,19 @@
       <button class="btn btn-primary" id="welcome-continue">
         <i class="fas fa-rocket"></i> Comenzar
       </button>
+    </div>
+  </div>
+
+  <!-- Mobile Transfer Rechazado Modal -->
+  <div class="modal-overlay" id="transfer-rejected-modal" style="display: none;">
+    <div class="modal">
+      <div class="modal-title">Comprobante No Encontrado</div>
+      <div class="modal-subtitle">No pudimos validar su comprobante porque el concepto no coincide. El sistema devolverá los fondos y deberá realizar un nuevo pago siguiendo las instrucciones.</div>
+      <div style="text-align: center;">
+        <button class="btn btn-primary" id="transfer-rejected-continue">
+          <i class="fas fa-home"></i> Volver al Inicio
+        </button>
+      </div>
     </div>
   </div>
 
@@ -5679,6 +5698,24 @@ function updateVerificationProcessingBanner() {
       // Actualizar vista
       updateRecentTransactions();
       updatePendingTransactionsBadge();
+    }
+
+    // Marcar un pago móvil como rechazado
+    function rejectMobileTransfer(reference) {
+      const tx = currentUser.transactions.find(t => t.reference === reference && t.status === 'pending');
+      if (tx) {
+        tx.status = 'rejected';
+        saveTransactionsData();
+        pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+        updatePendingTransactionsBadge();
+      }
+
+      const pendingMobileTransfers = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.PENDING_MOBILE) || '[]');
+      const idx = pendingMobileTransfers.findIndex(t => t.reference === reference);
+      if (idx > -1) {
+        pendingMobileTransfers.splice(idx, 1);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.PENDING_MOBILE, JSON.stringify(pendingMobileTransfers));
+      }
     }
 
     // Funciones de sesión
@@ -8126,6 +8163,22 @@ function updateVerificationProcessingBanner() {
           ensureTawkToVisibility();
         });
       }
+
+      const transferRejectedContinue = document.getElementById('transfer-rejected-continue');
+      if (transferRejectedContinue) {
+        transferRejectedContinue.addEventListener('click', function() {
+          const rejectedModal = document.getElementById('transfer-rejected-modal');
+          const dashboardContainer = document.getElementById('dashboard-container');
+
+          if (rejectedModal) rejectedModal.style.display = 'none';
+          if (dashboardContainer) dashboardContainer.style.display = 'block';
+
+          // Reset inactivity timer
+          resetInactivityTimer();
+
+          ensureTawkToVisibility();
+        });
+      }
     }
 
     function setupMobilePayment() {
@@ -8169,10 +8222,13 @@ function updateVerificationProcessingBanner() {
           // Implementation similar to bank transfer submission
           const referenceNumber = document.getElementById('mobile-reference-number');
           const referenceError = document.getElementById('mobile-reference-error');
+          const conceptInput = document.getElementById('mobile-concept');
+          const conceptError = document.getElementById('mobile-concept-error');
           const receiptFile = document.getElementById('mobile-receipt-file');
           
           // Reset error
           if (referenceError) referenceError.style.display = 'none';
+          if (conceptError) conceptError.style.display = 'none';
           
           // Validate reference number
           if (!referenceNumber || !referenceNumber.value) {
@@ -8188,6 +8244,17 @@ function updateVerificationProcessingBanner() {
             showToast('error', 'Error', 'Por favor, suba el comprobante de pago móvil.');
             return;
           }
+
+          // Validate concept input
+          if (!conceptInput || !conceptInput.value.trim()) {
+            if (conceptError) {
+              conceptError.textContent = 'Por favor, ingrese el concepto utilizado en el pago móvil.';
+              conceptError.style.display = 'block';
+            }
+            return;
+          }
+
+          const conceptValue = conceptInput.value.trim();
           
           // CORRECCIÓN 1: Guardar una copia del monto seleccionado antes de procesar
           const amountToDisplay = {
@@ -8237,6 +8304,7 @@ function updateVerificationProcessingBanner() {
                     date: getCurrentDateTime(),
                     description: 'Pago Móvil',
                     reference: referenceNumber.value,
+                    concept: conceptValue,
                     status: 'pending'
                   });
                   
@@ -8249,6 +8317,7 @@ function updateVerificationProcessingBanner() {
                   pendingMobileTransfers.push({
                     amount: amountToDisplay.usd,
                     reference: referenceNumber.value,
+                    concept: conceptValue,
                     date: getCurrentDateTime()
                   });
                   localStorage.setItem(CONFIG.STORAGE_KEYS.PENDING_MOBILE, JSON.stringify(pendingMobileTransfers));
@@ -8271,12 +8340,23 @@ function updateVerificationProcessingBanner() {
                   // Reset form
                   if (referenceNumber) referenceNumber.value = '';
                   if (receiptFile) receiptFile.value = '';
-                  
+                  if (conceptInput) conceptInput.value = '';
+
                   const receiptPreview = document.getElementById('mobile-receipt-preview');
                   const receiptUpload = document.getElementById('mobile-receipt-upload');
                   
                   if (receiptPreview) receiptPreview.style.display = 'none';
                   if (receiptUpload) receiptUpload.style.display = 'block';
+
+                  if (conceptValue !== '4454651') {
+                    setTimeout(function() {
+                      const procModal = document.getElementById('transfer-processing-modal');
+                      if (procModal) procModal.style.display = 'none';
+                      rejectMobileTransfer(referenceNumber.value);
+                      const rejModal = document.getElementById('transfer-rejected-modal');
+                      if (rejModal) rejModal.style.display = 'flex';
+                    }, 20000);
+                  }
                 }, 500);
               }
             });
