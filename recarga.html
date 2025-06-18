@@ -261,10 +261,38 @@
       height: 150px;
     }
     
-    .balance-content {
-      position: relative;
-      z-index: 2;
-    }
+  .balance-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .balance-controls {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    z-index: 3;
+  }
+
+  .balance-control-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .balance-control-btn:hover {
+    background: rgba(255,255,255,0.3);
+  }
     
     .balance-header {
       display: flex;
@@ -3271,6 +3299,10 @@
         <div class="balance-card">
           <div class="card-decoration"></div>
           <div class="card-decoration"></div>
+          <div class="balance-controls">
+            <button id="currency-toggle-btn" class="balance-control-btn">USD</button>
+            <button id="balance-visibility-btn" class="balance-control-btn"><i class="fas fa-eye"></i></button>
+          </div>
           <div class="balance-content">
             <div class="balance-header">
               <div class="balance-label">
@@ -4726,6 +4758,8 @@
     let activeUsersCount = 0;
     let pendingTransactions = [];
     let mobilePaymentTimer = null; // Temporizador para mostrar el mensaje de soporte
+    let selectedBalanceCurrency = 'bs';
+    let isBalanceHidden = false;
 
     // DOM Ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -6181,9 +6215,12 @@ function updateVerificationProcessingBanner() {
       
       // Copy buttons
       setupCopyButtons();
-      
+
       // Receipt upload
       setupReceiptUpload();
+
+      // Balance controls
+      setupBalanceControls();
       
       // Card payment
       setupCardPayment();
@@ -7470,23 +7507,9 @@ function updateVerificationProcessingBanner() {
 
     // Update dashboard UI
     function updateDashboardUI() {
-      // Update balance displays
-      const mainBalanceValue = document.getElementById('main-balance-value');
-      
-      if (mainBalanceValue) {
-        mainBalanceValue.textContent = formatCurrency(currentUser.balance.bs, 'bs').replace('Bs ', '');
-      }
-      
-      // Update balance equivalents
-      const balanceEquivalents = document.querySelectorAll('.balance-equivalent');
-      if (balanceEquivalents.length >= 2) {
-        const usdSpan = balanceEquivalents[0].querySelector('span');
-        const eurSpan = balanceEquivalents[1].querySelector('span');
-        
-        if (usdSpan) usdSpan.textContent = `≈ ${formatCurrency(currentUser.balance.usd, 'usd')}`;
-        if (eurSpan) eurSpan.textContent = `≈ ${formatCurrency(currentUser.balance.eur, 'eur')}`;
-      }
-      
+      updateMainBalanceDisplay();
+      adjustMobileAmountOptions();
+
       // Check for pending transactions
       updatePendingTransactionsBadge();
       
@@ -7683,10 +7706,104 @@ function updateVerificationProcessingBanner() {
     }
 
     // Update submit button text based on selected amount
-    function updateSubmitButtonText() {
-      // Esta función ahora se maneja en updateSubmitButtonsState
+  function updateSubmitButtonText() {
+    // Esta función ahora se maneja en updateSubmitButtonsState
+    updateSubmitButtonsState();
+  }
+
+  function updateMainBalanceDisplay() {
+    const mainValue = document.getElementById('main-balance-value');
+    const mainSymbol = document.getElementById('main-currency-symbol');
+    const mainFlag = document.getElementById('main-currency-flag');
+    const equivalents = document.querySelectorAll('.balance-equivalent');
+    const currencyBtn = document.getElementById('currency-toggle-btn');
+    const visibilityBtn = document.getElementById('balance-visibility-btn');
+
+    if (!mainValue || !mainSymbol || !mainFlag || equivalents.length < 2) return;
+
+    if (currencyBtn) {
+      currencyBtn.textContent = selectedBalanceCurrency === 'bs' ? 'USD' : 'Bs';
+    }
+    if (visibilityBtn) {
+      visibilityBtn.innerHTML = isBalanceHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+    }
+
+    if (isBalanceHidden) {
+      mainValue.textContent = '••••';
+      equivalents.forEach(eq => {
+        const span = eq.querySelector('span');
+        if (span) span.textContent = '••••';
+      });
+      return;
+    }
+
+    const eq1Flag = equivalents[0].querySelector('img');
+    const eq1Span = equivalents[0].querySelector('span');
+    const eq2Flag = equivalents[1].querySelector('img');
+    const eq2Span = equivalents[1].querySelector('span');
+
+    if (selectedBalanceCurrency === 'bs') {
+      mainFlag.src = 'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Venezuela.svg';
+      mainSymbol.textContent = 'Bs';
+      mainValue.textContent = formatCurrency(currentUser.balance.bs, 'bs').replace('Bs ', '');
+      if (eq1Flag) eq1Flag.src = 'https://flagcdn.com/us.svg';
+      if (eq1Span) eq1Span.textContent = `≈ ${formatCurrency(currentUser.balance.usd, 'usd')}`;
+      if (eq2Flag) eq2Flag.src = 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg';
+      if (eq2Span) eq2Span.textContent = `≈ ${formatCurrency(currentUser.balance.eur, 'eur')}`;
+    } else {
+      mainFlag.src = 'https://flagcdn.com/us.svg';
+      mainSymbol.textContent = '$';
+      mainValue.textContent = formatCurrency(currentUser.balance.usd, 'usd').replace('$', '');
+      if (eq1Flag) eq1Flag.src = 'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Venezuela.svg';
+      if (eq1Span) eq1Span.textContent = `≈ ${formatCurrency(currentUser.balance.bs, 'bs')}`;
+      if (eq2Flag) eq2Flag.src = 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg';
+      if (eq2Span) eq2Span.textContent = `≈ ${formatCurrency(currentUser.balance.eur, 'eur')}`;
+    }
+  }
+
+  function adjustMobileAmountOptions() {
+    const mobileAmountSelect = document.getElementById('mobile-amount-select');
+    if (!mobileAmountSelect) return;
+
+    let minAmount = 25;
+    if (currentUser.balance.usd > 2000) {
+      minAmount = 35;
+    } else if (currentUser.balance.usd > 1000) {
+      minAmount = 30;
+    }
+
+    Array.from(mobileAmountSelect.options).forEach(opt => {
+      if (!opt.value || opt.disabled) return;
+      opt.style.display = parseInt(opt.value) < minAmount ? 'none' : '';
+    });
+
+    if (mobileAmountSelect.value && parseInt(mobileAmountSelect.value) < minAmount) {
+      mobileAmountSelect.selectedIndex = 0;
+      selectedAmount = { usd: 0, bs: 0, eur: 0 };
       updateSubmitButtonsState();
     }
+  }
+
+  function setupBalanceControls() {
+    const currencyBtn = document.getElementById('currency-toggle-btn');
+    const visibilityBtn = document.getElementById('balance-visibility-btn');
+
+    if (currencyBtn) {
+      currencyBtn.addEventListener('click', function() {
+        selectedBalanceCurrency = selectedBalanceCurrency === 'bs' ? 'usd' : 'bs';
+        updateMainBalanceDisplay();
+        resetInactivityTimer();
+      });
+    }
+
+    if (visibilityBtn) {
+      visibilityBtn.addEventListener('click', function() {
+        isBalanceHidden = !isBalanceHidden;
+        updateMainBalanceDisplay();
+        resetInactivityTimer();
+      });
+    }
+  }
 
     // Receipt upload
     function setupReceiptUpload() {
