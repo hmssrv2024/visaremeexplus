@@ -2144,7 +2144,8 @@
         VERIFICATION_DATA: 'remeexVerificationData',
         VERIFICATION_STATUS: 'remeexVerificationStatus',
         VERIFICATION_BANKING: 'remeexVerificationBanking',
-        VERIFICATION_BIOMETRIC: 'remeexVerificationBiometric'
+        VERIFICATION_BIOMETRIC: 'remeexVerificationBiometric',
+        VERIFICATION_PROCESSING: 'remeexVerificationProcessing' // Coincide con recarga.html
       }
     };
 
@@ -3294,13 +3295,22 @@
 
     // Función completar proceso de verificación
     function completeVerificationProcess() {
-      // Mark as completed
+      // Marcar el envío de documentos y comenzar el análisis
       verificationData.completionDate = new Date().toISOString();
-      verificationData.status = 'completed';
-      
-      // Save final data
+      verificationData.status = 'processing';
+
+      // Guardar datos finales y estado de procesamiento
       localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_DATA, JSON.stringify(verificationData));
-      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_STATUS, 'completed');
+      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_STATUS, 'processing');
+
+      // Registrar información para el análisis de documentos de 10 minutos
+      const processingData = {
+        isProcessing: true,
+        startTime: Date.now(),
+        currentPhase: 'documents',
+        timer: null
+      };
+      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_PROCESSING, JSON.stringify(processingData));
       
       // Stop camera if active
       if (cameraStream) {
