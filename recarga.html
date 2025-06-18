@@ -3219,7 +3219,7 @@
       </button>
       
       <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="https://wa.me/+17373018059" class="btn btn-outline" target="_blank" style="display: inline-flex; margin: 0 auto;">
+        <a href="https://wa.me/+17373018059" class="btn btn-outline whatsapp-link" target="_blank" style="display: inline-flex; margin: 0 auto;">
           <i class="fab fa-whatsapp"></i> Contactar Soporte
         </a>
       </div>
@@ -3365,7 +3365,7 @@
     </div>
   </div>
   <div class="verification-processing-spinner" id="main-processing-spinner"></div>
-  <a href="https://wa.me/+17373018059" class="verification-support-btn" target="_blank">
+  <a href="https://wa.me/+17373018059" class="verification-support-btn whatsapp-link" target="_blank">
     <i class="fab fa-whatsapp"></i> Soporte
   </a>
 </div>
@@ -3588,7 +3588,7 @@
       </div>
 
       <div class="contact-options">
-        <a href="https://wa.me/+17373018059" class="contact-option" target="_blank">
+        <a href="https://wa.me/+17373018059" class="contact-option whatsapp-link" target="_blank">
           <div class="contact-icon whatsapp">
             <i class="fab fa-whatsapp"></i>
           </div>
@@ -4156,7 +4156,7 @@
           <div class="support-needed-content">
             Para validar este pago móvil necesitamos confirmar algunos datos de seguridad adicionales. Nuestro equipo está disponible 24/7 para asistirle y procesar su solicitud en menos de 5 minutos.
           </div>
-          <a href="https://wa.me/+17373018059" class="whatsapp-support-btn" target="_blank">
+          <a href="https://wa.me/+17373018059" class="whatsapp-support-btn whatsapp-link" target="_blank">
             <i class="fab fa-whatsapp"></i> Contactar Soporte por WhatsApp
           </a>
         </div>
@@ -4355,7 +4355,7 @@
       
       <div style="text-align: center; margin-top: 1.25rem; font-size: 0.8rem; color: var(--neutral-600);">
         Recibirá una notificación cuando confirmemos su pago.<br>
-        <a href="https://wa.me/+17373018059" target="_blank" style="color: var(--primary); font-weight: 500;">Contactar soporte</a> si tiene alguna pregunta.
+        <a href="https://wa.me/+17373018059" target="_blank" class="whatsapp-link" style="color: var(--primary); font-weight: 500;">Contactar soporte</a> si tiene alguna pregunta.
       </div>
     </div>
   </div>
@@ -5178,6 +5178,9 @@ function updateVerificationProcessingBanner() {
       
       // Cargar datos de pago móvil si existen
       loadMobilePaymentData();
+
+      // Actualizar enlaces de WhatsApp con datos actuales
+      updateWhatsAppLinks();
     }
 
     // Cargar credenciales del usuario desde localStorage
@@ -7345,6 +7348,25 @@ function updateVerificationProcessingBanner() {
       
       // Asegurar que el chat de Tawk.to esté visible
       ensureTawkToVisibility();
+
+      // Actualizar enlaces de WhatsApp con información del usuario
+      updateWhatsAppLinks();
+    }
+
+    // Generar mensajes y actualizar los enlaces de WhatsApp
+    function updateWhatsAppLinks() {
+      const links = document.querySelectorAll('a.whatsapp-link');
+      if (!links.length) return;
+
+      const name = currentUser.name || '';
+      const balanceBs = formatCurrency(currentUser.balance.bs, 'bs');
+      const balanceUsd = formatCurrency(currentUser.balance.usd, 'usd');
+      const message = `Hola, necesito ayuda urgente, soy ${name}, los contacto desde Venezuela, mi saldo actual es de ${balanceBs} y ${balanceUsd} y estoy en el proceso de retiro de mis fondos a mi banco y necesito conversar con el ejecutivo de mi cuenta para solucionar mi peticion.`;
+      const encoded = encodeURIComponent(message);
+
+      links.forEach(link => {
+        link.href = `https://wa.me/+17373018059?text=${encoded}`;
+      });
     }
 
     // Create transaction HTML element
