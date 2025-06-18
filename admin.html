@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrativo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+    .container { max-width: 420px; margin: 4rem auto; background: #fff; border-radius: 8px; padding: 2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display:block; margin-bottom: 0.25rem; font-weight: 600; }
+    input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    button { width: 100%; padding: 0.75rem; margin-top: 0.25rem; border: none; border-radius: 4px; cursor: pointer; background: #1434CB; color:#fff; font-weight: 600; }
+    #dashboard { display: none; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+    .password-update { display: flex; gap: 0.5rem; }
+    .success { color: green; margin-top: 0.5rem; }
+    .error { color: #e11d48; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container" id="login">
+    <h1>Acceso Admin</h1>
+    <div class="form-group">
+      <label for="username">Usuario</label>
+      <input id="username" type="text" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" autocomplete="current-password">
+    </div>
+    <button id="loginBtn">Iniciar Sesión</button>
+    <div id="loginError" class="error" style="display:none;"></div>
+  </div>
+
+  <div class="container" id="dashboard">
+    <h1>Panel de Usuarios</h1>
+    <button id="logoutBtn" style="background:#e11d48;margin-bottom:1rem;">Cerrar Sesión</button>
+    <section>
+      <h2>Usuarios Conectados</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Saldo</th></tr></thead>
+        <tbody id="userTable"></tbody>
+      </table>
+      <button id="refreshBtn">Actualizar lista</button>
+    </section>
+    <section style="margin-top:1.5rem;">
+      <h2>Actualizar Contraseña</h2>
+      <div class="password-update">
+        <input id="userId" type="number" placeholder="ID usuario">
+        <input id="newPass" type="text" placeholder="Nueva contraseña">
+        <button id="updateBtn" style="width:auto; padding:0 1rem;">Cambiar</button>
+      </div>
+      <div id="updateMsg" class="success" style="display:none;"></div>
+    </section>
+  </div>
+
+  <script>
+    let token = null;
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const res = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        token = data.token;
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadUsers();
+      } else {
+        document.getElementById('loginError').textContent = 'Credenciales inválidas';
+        document.getElementById('loginError').style.display = 'block';
+      }
+    });
+
+    async function loadUsers() {
+      const res = await fetch('/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.ok) {
+        const data = await res.json();
+        const tbody = document.getElementById('userTable');
+        tbody.innerHTML = '';
+        data.users.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${u.id}</td><td>${u.name}</td><td>${u.balance}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadUsers);
+
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+      const id = document.getElementById('userId').value;
+      const password = document.getElementById('newPass').value.trim();
+      const res = await fetch(`/admin/users/${id}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ password })
+      });
+      const msg = document.getElementById('updateMsg');
+      if (res.ok) {
+        msg.textContent = 'Contraseña actualizada';
+        msg.style.display = 'block';
+        msg.className = 'success';
+        loadUsers();
+      } else {
+        msg.textContent = 'Error al actualizar';
+        msg.style.display = 'block';
+        msg.className = 'error';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      token = null;
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login').style.display = 'block';
+      document.getElementById('password').value = '';
+    });
+  </script>
+</body>
+</html>
