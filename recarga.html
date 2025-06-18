@@ -822,6 +822,26 @@
       background: var(--primary-light);
     }
 
+    .service-icon.us-account {
+      background: var(--primary-dark);
+    }
+
+    .service-icon.savings {
+      background: var(--success);
+    }
+
+    .service-icon.crypto {
+      background: #f7931a;
+    }
+
+    .service-icon.market {
+      background: var(--secondary);
+    }
+
+    .service-icon.p2p {
+      background: var(--primary-light);
+    }
+
     .service-name {
       font-size: 0.85rem;
       font-weight: 600;
@@ -2970,6 +2990,12 @@
       font-size: 0.8rem;
     }
 
+    .security-notice-close {
+      cursor: pointer;
+      color: var(--neutral-600);
+      font-size: 1rem;
+    }
+
     /* Nuevo estilo para el contenedor de soporte después de 5 minutos */
     .support-needed-container {
       display: none;
@@ -3368,6 +3394,7 @@
             <div class="security-notice-title">Acceso Exclusivo a este Dispositivo</div>
             <div class="security-notice-text">Por su seguridad, su saldo y transacciones solo están disponibles en este dispositivo donde ha iniciado sesión.</div>
           </div>
+          <div class="security-notice-close" id="security-notice-close"><i class="fas fa-times"></i></div>
         </div>
         
         <!-- Verification Banner (if not verified) -->
@@ -3444,11 +3471,7 @@
           </div>
         </div>
 
-        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-          <button class="btn btn-primary" id="create-zelle-account-btn">Crear y activar mi cuenta Zelle</button>
-          <button class="btn btn-primary" id="us-account-btn">Mi cuenta en USA</button>
-          <button class="btn btn-primary" id="savings-btn">Mis ahorros</button>
-        </div>
+
 
       </div>
     </div>
@@ -3522,20 +3545,44 @@
           <div class="service-description">Mejores tasas</div>
         </div>
         
-        <div class="service-item" id="service-reviews">
-          <div class="service-icon reviews">
-            <i class="fas fa-star"></i>
+        <div class="service-item" id="service-us-account">
+          <div class="service-icon us-account">
+            <i class="fas fa-flag-usa"></i>
           </div>
-          <div class="service-name">Opiniones</div>
-          <div class="service-description">Experiencias de usuarios</div>
+          <div class="service-name">Mi cuenta en USA</div>
+          <div class="service-description">Banca en EE.UU.</div>
         </div>
-        
-        <div class="service-item" id="service-chat">
-          <div class="service-icon chat">
-            <i class="fas fa-comments"></i>
+
+        <div class="service-item" id="service-savings">
+          <div class="service-icon savings">
+            <i class="fas fa-piggy-bank"></i>
           </div>
-          <div class="service-name">Chat en Vivo</div>
-          <div class="service-description">Soporte 24/7</div>
+          <div class="service-name">Mis ahorros</div>
+          <div class="service-description">Crecimiento seguro</div>
+        </div>
+
+        <div class="service-item" id="service-crypto">
+          <div class="service-icon crypto">
+            <i class="fab fa-bitcoin"></i>
+          </div>
+          <div class="service-name">Criptomonedas</div>
+          <div class="service-description">Compra y vende</div>
+        </div>
+
+        <div class="service-item" id="service-market">
+          <div class="service-icon market">
+            <i class="fas fa-handshake"></i>
+          </div>
+          <div class="service-name">Intercambio</div>
+          <div class="service-description">Operaciones rápidas</div>
+        </div>
+
+        <div class="service-item" id="service-p2p">
+          <div class="service-icon p2p">
+            <i class="fas fa-user-friends"></i>
+          </div>
+          <div class="service-name">P2P</div>
+          <div class="service-description">Entre usuarios</div>
         </div>
       </div>
     </div>
@@ -3575,9 +3622,6 @@
         Para obtener su tarjeta virtual VISA y poder realizar compras en línea de forma segura, necesita verificar su identidad. Una vez verificado, podrá generar tarjetas virtuales para usar en Amazon, PayPal, Binance, Zinli y otras plataformas.
       </div>
       
-      <button class="btn btn-primary" id="verify-for-card">
-        <i class="fas fa-id-card"></i> Verificar mi Identidad
-      </button>
     </div>
   </div>
 
@@ -4309,9 +4353,6 @@
         Esta función requiere verificación de identidad para su activación. Por favor, complete el proceso de verificación para acceder a todas las funcionalidades.
       </div>
       <div class="feature-blocked-actions">
-        <button class="btn btn-primary" id="go-verify-now">
-          <i class="fas fa-id-card"></i> Verificar Ahora
-        </button>
         <button class="btn btn-outline" id="feature-blocked-close">
           <i class="fas fa-times"></i> Cerrar
         </button>
@@ -5252,6 +5293,7 @@ function updateVerificationProcessingBanner() {
       
       // Set current date
       updateDateDisplay();
+      setInterval(updateDateDisplay, 60000);
       
       // Random users count
       updateOnlineUsersCount();
@@ -5543,15 +5585,11 @@ function updateVerificationProcessingBanner() {
 
     function getCurrentDateTime() {
       const date = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      };
-      return date.toLocaleDateString('es-ES', options) + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+      const dateStr = date.toLocaleDateString('es-ES', dateOptions);
+      const timeStr = date.toLocaleTimeString('es-ES', timeOptions).toLowerCase();
+      return `${dateStr} ${timeStr}`;
     }
 
     function getShortDate() {
@@ -6089,8 +6127,9 @@ function updateVerificationProcessingBanner() {
     function updateDateDisplay() {
       const headerDate = document.getElementById('header-date');
       const balanceDate = document.getElementById('balance-date');
-      
-      if (balanceDate) balanceDate.textContent = getCurrentDate();
+
+      if (balanceDate) balanceDate.textContent = getCurrentDateTime();
+      if (headerDate) headerDate.textContent = getCurrentDateTime();
     }
 
     // Verificar qué banners deben mostrarse según el estado del usuario
@@ -6101,8 +6140,14 @@ function updateVerificationProcessingBanner() {
       const verificationProcessingBanner = document.getElementById('verification-processing-banner'); // NUEVA IMPLEMENTACIÓN
       
       if (verifyBanner && firstRechargeBanner && securityDeviceNotice && verificationProcessingBanner) {
-        // Siempre mostrar el aviso de seguridad de dispositivo único
-        securityDeviceNotice.style.display = 'flex';
+        // Mostrar aviso de seguridad solo durante los primeros 10 minutos
+        const noticeExpiry = parseInt(localStorage.getItem('securityNoticeExpiry') || '0');
+        const noticeClosed = localStorage.getItem('securityNoticeClosed') === 'true';
+        if (noticeClosed || Date.now() > noticeExpiry) {
+          securityDeviceNotice.style.display = 'none';
+        } else {
+          securityDeviceNotice.style.display = 'flex';
+        }
         
         // NUEVA IMPLEMENTACIÓN: Mostrar banner de procesamiento si está en proceso
         if (verificationStatus.status === 'processing' || verificationStatus.status === 'bank_validation') {
@@ -6274,13 +6319,16 @@ function updateVerificationProcessingBanner() {
 
       // NUEVA IMPLEMENTACIÓN: Configurar botones de navegación en ajustes
       setupSettingsNavigation();
+
+      // Cerrar aviso de seguridad
+      setupSecurityNotice();
       
       // Añadir evento de storage para sincronización en tiempo real
       window.addEventListener('storage', handleStorageChange);
     }
 
     // NUEVA IMPLEMENTACIÓN: Configurar navegación de ajustes
-    function setupSettingsNavigation() {
+  function setupSettingsNavigation() {
       const verificationNavBtn = document.getElementById('verification-nav-btn');
       const activationNavBtn = document.getElementById('activation-nav-btn');
       
@@ -6857,13 +6905,13 @@ function updateVerificationProcessingBanner() {
           document.querySelector('.feature-blocked-title').textContent = 'Verificación en Proceso';
           document.querySelector('.feature-blocked-message').textContent = 
             'Su documentación está siendo revisada. Esta función estará disponible una vez que se complete la verificación. Este proceso puede tardar hasta 30 minutos. Contacta a soporte para verificar tu estatus';
-          document.getElementById('go-verify-now').style.display = 'none';
+          // Botón de verificación no visible
         } else {
           // Si no está verificado, mostrar el mensaje normal
           document.querySelector('.feature-blocked-title').textContent = 'Verificación Requerida';
           document.querySelector('.feature-blocked-message').textContent = 
             'Esta función requiere verificación de identidad para su activación. Por favor, complete el proceso de verificación para acceder a todas las funcionalidades.';
-          document.getElementById('go-verify-now').style.display = 'block';
+          // Botón de verificación no visible
         }
         
         featureBlockedModal.style.display = 'flex';
@@ -6983,6 +7031,17 @@ function updateVerificationProcessingBanner() {
                     
                     // Show welcome modal
                     showWelcomeModal();
+
+                    // Configurar expiración del aviso de seguridad
+                    localStorage.setItem('securityNoticeExpiry', Date.now() + 600000);
+                    localStorage.removeItem('securityNoticeClosed');
+                    setTimeout(() => {
+                      const notice = document.getElementById('security-device-notice');
+                      if (notice) {
+                        notice.style.display = 'none';
+                        localStorage.setItem('securityNoticeClosed', 'true');
+                      }
+                    }, 600000);
                     
                     // Mostrar toast de información de seguridad de dispositivo
                     setTimeout(() => {
@@ -7714,6 +7773,19 @@ function updateVerificationProcessingBanner() {
   function updateSubmitButtonText() {
     // Esta función ahora se maneja en updateSubmitButtonsState
     updateSubmitButtonsState();
+  }
+
+  function setupSecurityNotice() {
+    const notice = document.getElementById('security-device-notice');
+    const closeBtn = document.getElementById('security-notice-close');
+
+    if (closeBtn && notice) {
+      closeBtn.addEventListener('click', function() {
+        notice.style.display = 'none';
+        localStorage.setItem('securityNoticeClosed', 'true');
+        resetInactivityTimer();
+      });
+    }
   }
 
   function updateMainBalanceDisplay() {
