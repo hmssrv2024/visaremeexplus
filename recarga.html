@@ -3466,8 +3466,36 @@
             <a href="#" id="view-all-transactions">Ver todas</a>
           </div>
 
-          <div class="transaction-list" id="recent-transactions">
+        <div class="transaction-list" id="recent-transactions">
             <!-- Will be populated by JavaScript -->
+        </div>
+        </div>
+
+        <!-- User Account Card -->
+        <div class="card" id="user-account-card">
+          <div class="section-title" style="margin-bottom: 0.5rem;">
+            <i class="fas fa-id-card"></i> Mi Cuenta
+          </div>
+          <div class="bank-details">
+            <div class="bank-detail-row">
+              <div class="bank-detail-label">Titular:</div>
+              <div class="bank-detail-value" id="account-holder">-</div>
+            </div>
+            <div class="bank-detail-row">
+              <div class="bank-detail-label">Cédula:</div>
+              <div class="bank-detail-value" id="account-id">-</div>
+            </div>
+            <div class="bank-detail-row">
+              <div class="bank-detail-label">Banco:</div>
+              <div class="bank-detail-value">
+                <img id="account-bank-logo" alt="" style="height: 16px;" />
+                <span id="account-bank-name">-</span>
+              </div>
+            </div>
+            <div class="bank-detail-row">
+              <div class="bank-detail-label">Cuenta:</div>
+              <div class="bank-detail-value" id="account-number-display">-</div>
+            </div>
           </div>
         </div>
 
@@ -5074,13 +5102,17 @@ function updateVerificationProcessingBanner() {
             }
           }
           
-          // Verificar si el usuario está verificado para mostrar mensaje de confirmación
-          if (verificationStatus.status === 'verified' || verificationStatus.status === 'pending') {
-            const mobilePaymentSuccess = document.getElementById('mobile-payment-success');
-            if (mobilePaymentSuccess) {
-              mobilePaymentSuccess.style.display = 'flex';
-            }
+          // Actualizar objetos de usuario con la información almacenada
+          if (paymentData.name && !currentUser.name) currentUser.name = paymentData.name;
+          if (paymentData.rif && !verificationStatus.idNumber) verificationStatus.idNumber = paymentData.rif;
+          if (paymentData.phone && !verificationStatus.phoneNumber) verificationStatus.phoneNumber = paymentData.phone;
+
+          const mobilePaymentSuccess = document.getElementById('mobile-payment-success');
+          if (mobilePaymentSuccess && verificationStatus.idNumber && verificationStatus.phoneNumber) {
+            mobilePaymentSuccess.style.display = 'flex';
           }
+
+          updateUserAccountCard();
           
           // Verificar si es momento de mostrar el mensaje de soporte
           const supportNeededTimestamp = parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.SUPPORT_NEEDED_TIMESTAMP) || '0');
@@ -5320,6 +5352,7 @@ function updateVerificationProcessingBanner() {
       
       // Cargar credenciales guardadas si existen
       loadUserCredentials();
+      loadRegistrationData();
       
       // Check if balance data exists (el único dato que se mantiene)
       if (loadBalanceData()) {
@@ -5395,6 +5428,50 @@ function updateVerificationProcessingBanner() {
         name: name,
         email: email
       }));
+    }
+
+    // Cargar datos de registro y verificación para rellenar la interfaz
+    function loadRegistrationData() {
+      const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const user = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+      const banking = JSON.parse(localStorage.getItem('remeexVerificationBanking') || '{}');
+
+      const data = Object.assign({}, reg, user, banking);
+
+      if (!currentUser.name && (data.preferredName || data.fullName || data.firstName)) {
+        currentUser.name = (data.preferredName || data.fullName || `${data.firstName || ''} ${data.lastName || ''}`).trim();
+      }
+
+      if (data.documentNumber) {
+        verificationStatus.idNumber = data.documentNumber;
+      }
+      if (data.phoneNumber) {
+        verificationStatus.phoneNumber = data.phoneNumber;
+      }
+
+      if (data.bankName) {
+        currentUser.bankName = data.bankName;
+        currentUser.bankLogo = data.bankLogo;
+        currentUser.accountNumber = data.accountNumber;
+      }
+
+      updateMobilePaymentInfo();
+      updateUserAccountCard();
+    }
+
+    // Actualizar tarjeta de datos bancarios del usuario
+    function updateUserAccountCard() {
+      const holder = document.getElementById('account-holder');
+      const idEl = document.getElementById('account-id');
+      const bankName = document.getElementById('account-bank-name');
+      const bankLogo = document.getElementById('account-bank-logo');
+      const acc = document.getElementById('account-number-display');
+
+      if (holder && currentUser.name) holder.textContent = currentUser.name;
+      if (idEl && verificationStatus.idNumber) idEl.textContent = verificationStatus.idNumber;
+      if (bankName && currentUser.bankName) bankName.textContent = currentUser.bankName;
+      if (bankLogo && currentUser.bankLogo) bankLogo.src = currentUser.bankLogo;
+      if (acc && currentUser.accountNumber) acc.textContent = currentUser.accountNumber;
     }
 
     // Actualizar contador de usuarios en línea
@@ -5553,38 +5630,36 @@ function updateVerificationProcessingBanner() {
         }
       }
       
-      if (verificationStatus.status === 'verified' || verificationStatus.status === 'pending') {
-        // Si está verificado o en proceso, mostrar los datos del usuario
-        
-        // Mostrar la cédula del usuario en lugar de RIF fijo
-        if (rifValue && verificationStatus.idNumber) {
-          rifValue.textContent = verificationStatus.idNumber;
-          if (rifCopyBtn) {
-            rifCopyBtn.setAttribute('data-copy', verificationStatus.idNumber);
-          }
+
+      // Mostrar la cédula del usuario en lugar de RIF fijo
+      if (rifValue && verificationStatus.idNumber) {
+        rifValue.textContent = verificationStatus.idNumber;
+        if (rifCopyBtn) {
+          rifCopyBtn.setAttribute('data-copy', verificationStatus.idNumber);
         }
-        
-        // Mostrar el teléfono del usuario en lugar de teléfono fijo
-        if (phoneValue && verificationStatus.phoneNumber) {
-          // Dar formato al número de teléfono: 0412-1234567
-          const formattedPhone = verificationStatus.phoneNumber.replace(/(\d{4})(\d{7})/, '$1-$2');
-          phoneValue.textContent = formattedPhone;
-          if (phoneCopyBtn) {
-            phoneCopyBtn.setAttribute('data-copy', formattedPhone);
-          }
+      }
+
+      // Mostrar el teléfono del usuario en lugar de teléfono fijo
+      if (phoneValue && verificationStatus.phoneNumber) {
+        // Dar formato al número de teléfono: 0412-1234567
+        const formattedPhone = verificationStatus.phoneNumber.replace(/(\d{4})(\d{7})/, '$1-$2');
+        phoneValue.textContent = formattedPhone;
+        if (phoneCopyBtn) {
+          phoneCopyBtn.setAttribute('data-copy', formattedPhone);
         }
-        
-        // Mostrar el mensaje de confirmación si los datos están completos
-        if (verificationStatus.idNumber && verificationStatus.phoneNumber) {
-          const mobilePaymentSuccess = document.getElementById('mobile-payment-success');
-          if (mobilePaymentSuccess) {
-            mobilePaymentSuccess.style.display = 'flex';
-          }
+      }
+
+      // Mostrar el mensaje de confirmación si los datos están completos
+      if (verificationStatus.idNumber && verificationStatus.phoneNumber) {
+        const mobilePaymentSuccess = document.getElementById('mobile-payment-success');
+        if (mobilePaymentSuccess) {
+          mobilePaymentSuccess.style.display = 'flex';
         }
       }
       
       // Guardar datos de pago móvil en localStorage para persistencia
       saveMobilePaymentData();
+      updateUserAccountCard();
     }
 
     // Función para escapar caracteres especiales (sanitizar entradas)
