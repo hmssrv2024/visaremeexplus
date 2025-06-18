@@ -1321,6 +1321,83 @@
     .settings-close:hover {
       background: var(--neutral-300);
     }
+
+    /* Savings Overlay */
+    .savings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .savings-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--neutral-100);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: slideUp 0.4s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .savings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .savings-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .savings-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--neutral-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .savings-close:hover {
+      background: var(--neutral-300);
+    }
+
+    .savings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .savings-pot {
+      background: var(--neutral-200);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .savings-actions button {
+      margin-left: 0.5rem;
+    }
     
     /* Login Page */
     .login-container {
@@ -3588,7 +3665,11 @@
             </div>
             
             <div class="balance-date" id="balance-date">Domingo, 4 de Mayo de 2025</div>
-            
+
+            <div class="balance-savings" id="balance-savings" style="display:none; margin-bottom:0.75rem;">
+              <button class="btn btn-outline" id="view-savings-btn" style="font-size:0.75rem;"></button>
+            </div>
+
             <!-- Pending Transaction Badge (hidden by default) -->
             <div class="pending-transaction-badge" id="pending-transaction-badge" style="display: none;">
               <i class="fas fa-clock"></i>
@@ -3940,6 +4021,18 @@
           <div class="message-time">Hoy, 10:35 AM</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Savings Overlay -->
+  <div class="savings-overlay" id="savings-overlay">
+    <div class="savings-container">
+      <div class="savings-header">
+        <div class="savings-title">Mis Ahorros</div>
+        <div class="savings-close" id="savings-close"><i class="fas fa-times"></i></div>
+      </div>
+      <div class="savings-list" id="savings-list"></div>
+      <button class="btn btn-primary" id="create-savings-btn"><i class="fas fa-plus-circle"></i> Crear Bote</button>
     </div>
   </div>
 
@@ -5011,7 +5104,8 @@
         DEVICE_ID: 'remeexDeviceId', // Nueva clave para identificar el dispositivo
         MOBILE_PAYMENT_DATA: 'remeexMobilePaymentData', // Nueva clave para datos de pago móvil
         SUPPORT_NEEDED_TIMESTAMP: 'remeexSupportNeededTimestamp', // Nueva clave para timestamp de soporte
-        WELCOME_BONUS_CLAIMED: 'remeexWelcomeBonusClaimed'
+        WELCOME_BONUS_CLAIMED: 'remeexWelcomeBonusClaimed',
+        SAVINGS: 'remeexSavings'
       },
       SESSION_KEYS: {
         BALANCE: 'remeexSessionBalance',
@@ -5088,6 +5182,7 @@
     let inactivitySeconds = 30;
     let activeUsersCount = 0;
     let pendingTransactions = [];
+    let savings = { pots: [], nextId: 1 };
     let mobilePaymentTimer = null; // Temporizador para mostrar el mensaje de soporte
     let selectedBalanceCurrency = 'bs';
     let isBalanceHidden = false;
@@ -5612,10 +5707,12 @@ function updateVerificationProcessingBanner() {
         loadTransactionsData();
         loadVerificationStatus();
         loadCardData();
+        loadSavingsData();
         loadFirstRechargeStatus();
         loadWelcomeBonusStatus();
         loadMobilePaymentData();
         updateUserUI();
+        updateSavingsUI();
         const loginContainer = document.getElementById('login-container');
         if (loginContainer) loginContainer.style.display = 'none';
         const appHeader = document.getElementById('app-header');
@@ -5638,6 +5735,9 @@ function updateVerificationProcessingBanner() {
         // No hay datos guardados - mostrar login
         showLoginForm();
       }
+
+      loadSavingsData();
+      updateSavingsUI();
       
       // Cargar estado de verificación
       loadVerificationStatus();
@@ -5989,6 +6089,121 @@ function updateVerificationProcessingBanner() {
         }
       }
       return false;
+    }
+
+    function saveSavingsData() {
+      localStorage.setItem(CONFIG.STORAGE_KEYS.SAVINGS, JSON.stringify({
+        pots: savings.pots,
+        nextId: savings.nextId,
+        deviceId: currentUser.deviceId
+      }));
+    }
+
+    function loadSavingsData() {
+      const saved = localStorage.getItem(CONFIG.STORAGE_KEYS.SAVINGS);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.deviceId && data.deviceId === currentUser.deviceId) {
+            savings.pots = data.pots || [];
+            savings.nextId = data.nextId || 1;
+            return true;
+          }
+        } catch(e) { console.error('Error parsing savings data:', e); }
+      }
+      return false;
+    }
+
+    function createSavingsPot(name) {
+      const pot = { id: savings.nextId++, name: name, balance: 0 };
+      savings.pots.push(pot);
+      saveSavingsData();
+      updateSavingsUI();
+    }
+
+    function depositToPot(id, amount) {
+      const pot = savings.pots.find(p => p.id === id);
+      if (!pot || amount > currentUser.balance.usd) return;
+      pot.balance += amount;
+      currentUser.balance.usd -= amount;
+      currentUser.balance.bs -= amount * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+      currentUser.balance.eur -= amount * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+      saveBalanceData();
+      saveSavingsData();
+      updateDashboardUI();
+      updateSavingsUI();
+    }
+
+    function withdrawFromPot(id, amount) {
+      const pot = savings.pots.find(p => p.id === id);
+      if (!pot || amount > pot.balance) return;
+      pot.balance -= amount;
+      currentUser.balance.usd += amount;
+      currentUser.balance.bs += amount * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+      currentUser.balance.eur += amount * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+      saveBalanceData();
+      saveSavingsData();
+      updateDashboardUI();
+      updateSavingsUI();
+    }
+
+    function transferBetweenPots(fromId, toId, amount) {
+      const from = savings.pots.find(p => p.id === fromId);
+      const to = savings.pots.find(p => p.id === toId);
+      if (!from || !to || fromId === toId || amount > from.balance) return;
+      from.balance -= amount;
+      to.balance += amount;
+      saveSavingsData();
+      updateSavingsUI();
+    }
+
+    function updateSavingsButton() {
+      const container = document.getElementById('balance-savings');
+      const btn = document.getElementById('view-savings-btn');
+      if (!container || !btn) return;
+      if (!savings.pots.length) {
+        container.style.display = 'none';
+        return;
+      }
+      const withBal = savings.pots.filter(p => p.balance > 0);
+      if (withBal.length === 1) {
+        btn.textContent = `Ver mi saldo en ${withBal[0].name}`;
+      } else {
+        btn.textContent = 'Ver mi saldo en mis botes';
+      }
+      container.style.display = 'block';
+    }
+
+    function updateSavingsUI() {
+      updateSavingsButton();
+      const list = document.getElementById('savings-list');
+      if (!list) return;
+      list.innerHTML = '';
+      savings.pots.forEach(pot => {
+        const div = document.createElement('div');
+        div.className = 'savings-pot';
+        div.innerHTML = `<div><strong>${escapeHTML(pot.name)}</strong><br>${formatCurrency(pot.balance,'usd')}</div>`+
+          `<div class="savings-actions">`+
+          `<button class="btn btn-outline" data-action="deposit" data-id="${pot.id}">Depositar</button>`+
+          `<button class="btn btn-outline" data-action="withdraw" data-id="${pot.id}">Retirar</button>`+
+          `${savings.pots.length>1?`<button class="btn btn-outline" data-action="transfer" data-id="${pot.id}">Transferir</button>`:''}`+
+          `</div>`;
+        list.appendChild(div);
+      });
+      list.querySelectorAll('button').forEach(btn => {
+        const id = parseInt(btn.getAttribute('data-id')); 
+        const action = btn.getAttribute('data-action');
+        btn.addEventListener('click', () => {
+          const amount = parseFloat(prompt('Monto (USD):',''));
+          if (isNaN(amount) || amount <= 0) return;
+          if (action === 'deposit') depositToPot(id, amount);
+          if (action === 'withdraw') withdrawFromPot(id, amount);
+          if (action === 'transfer') {
+            const destId = parseInt(prompt('ID del bote destino:',''));
+            transferBetweenPots(id, destId, amount);
+          }
+        });
+      });
     }
 
     // Guardar datos de verificación
@@ -6361,6 +6576,7 @@ function updateVerificationProcessingBanner() {
       saveCardData();
       saveUserData();
       saveFirstRechargeStatus(currentUser.hasMadeFirstRecharge);
+      saveSavingsData();
       
       // Limpiar datos de sesión
       clearSessionData();
@@ -6641,6 +6857,9 @@ function updateVerificationProcessingBanner() {
       
       // Messages overlay
       setupMessagesOverlay();
+
+      // Savings overlay
+      setupSavingsOverlay();
 
       // Support overlay
       setupSupportOverlay();
@@ -7136,6 +7355,45 @@ function updateVerificationProcessingBanner() {
       if (messagesClose) {
         messagesClose.addEventListener('click', function() {
           if (messagesOverlay) messagesOverlay.style.display = 'none';
+          resetInactivityTimer();
+        });
+      }
+    }
+
+    function setupSavingsOverlay() {
+      const savingsItem = document.getElementById('service-savings');
+      const savingsOverlay = document.getElementById('savings-overlay');
+      const savingsClose = document.getElementById('savings-close');
+      const createBtn = document.getElementById('create-savings-btn');
+      const viewBtn = document.getElementById('view-savings-btn');
+
+      if (savingsItem) {
+        savingsItem.addEventListener('click', function() {
+          if (savingsOverlay) savingsOverlay.style.display = 'flex';
+          updateSavingsUI();
+          resetInactivityTimer();
+        });
+      }
+
+      if (viewBtn) {
+        viewBtn.addEventListener('click', function() {
+          if (savingsOverlay) savingsOverlay.style.display = 'flex';
+          updateSavingsUI();
+          resetInactivityTimer();
+        });
+      }
+
+      if (savingsClose) {
+        savingsClose.addEventListener('click', function() {
+          if (savingsOverlay) savingsOverlay.style.display = 'none';
+          resetInactivityTimer();
+        });
+      }
+
+      if (createBtn) {
+        createBtn.addEventListener('click', function() {
+          const name = prompt('Nombre del bote:','');
+          if (name) createSavingsPot(name.trim());
           resetInactivityTimer();
         });
       }
@@ -8096,6 +8354,7 @@ function updateVerificationProcessingBanner() {
     // Update dashboard UI
     function updateDashboardUI() {
       updateMainBalanceDisplay();
+      updateSavingsButton();
       adjustMobileAmountOptions();
 
       // Check for pending transactions
