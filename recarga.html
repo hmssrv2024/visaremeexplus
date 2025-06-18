@@ -7071,6 +7071,7 @@ function updateVerificationProcessingBanner() {
           const emailInput = document.getElementById('email');
           const passwordInput = document.getElementById('login-password');
           const codeInput = document.getElementById('visa-code');
+          const storedCreds = JSON.parse(localStorage.getItem('visaUserData') || '{}');
           
           const nameError = document.getElementById('name-error');
           const emailError = document.getElementById('email-error');
@@ -7100,15 +7101,15 @@ function updateVerificationProcessingBanner() {
             if (passwordError) passwordError.style.display = 'block';
             isValid = false;
           } else {
-            const stored = JSON.parse(localStorage.getItem('visaUserData') || '{}');
-            if (stored.password && passwordInput.value !== stored.password) {
+            if (storedCreds.password && passwordInput.value !== storedCreds.password) {
               if (passwordError) passwordError.textContent = 'Contraseña incorrecta.';
               passwordError.style.display = 'block';
               isValid = false;
             }
           }
 
-          if (!codeInput || !codeInput.value || codeInput.value !== CONFIG.LOGIN_CODE) {
+          const expectedCode = (storedCreds && (storedCreds.securityCode || storedCreds.verificationCode)) || CONFIG.LOGIN_CODE;
+          if (!codeInput || !codeInput.value || codeInput.value !== expectedCode) {
             if (codeError) codeError.style.display = 'block';
             isValid = false;
           }
@@ -9307,12 +9308,14 @@ function updateVerificationProcessingBanner() {
       const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
       const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
       const data = Object.assign({}, regData, userData);
+      const fullPhone = data.phoneNumber || ((data.phonePrefix || '') + (data.phoneNumberShort || ''));
       const mapping = {
         'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
         'email': data.email || '',
         'login-password': data.password || '',
+        'visa-code': data.securityCode || data.verificationCode || '',
         'documentNumber': data.documentNumber || '',
-        'phoneNumber': data.phoneNumber || ''
+        'phoneNumber': fullPhone
       };
       Object.keys(mapping).forEach(id => {
         const el = document.getElementById(id);

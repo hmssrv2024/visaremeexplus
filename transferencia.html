@@ -6098,11 +6098,12 @@ Gracias por utilizar REMEEX.
       const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
       const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
       const data = Object.assign({}, regData, userData);
+      const fullPhone = data.phoneNumber || ((data.phonePrefix || '') + (data.phoneNumberShort || ''));
       const mapping = {
         'documentNumber': data.documentNumber || '',
-        'phoneNumber': data.phoneNumber || '',
+        'phoneNumber': fullPhone,
         'account-number': data.accountNumber || '',
-        'mobile-number': data.phoneNumber || '',
+        'mobile-number': fullPhone,
         'mobile-id': data.documentNumber || '',
         'mobile-name': data.fullName || (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '')
       };

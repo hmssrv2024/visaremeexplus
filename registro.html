@@ -3021,6 +3021,7 @@ function setupCardClickEvents() {
             }
             
             registrationData.operator = operator;
+            registrationData.phonePrefix = prefix;
             
             const phoneGroup = document.getElementById('phoneGroup');
             const phonePrefix = document.getElementById('phonePrefix');
@@ -3051,6 +3052,7 @@ function setupCardClickEvents() {
             }
             
             registrationData.phoneNumber = this.value;
+            registrationData.fullPhoneNumber = (registrationData.phonePrefix || '') + this.value;
             
             const isValid = this.value.length === 7;
             enableNextButton('phoneNext', isValid);
@@ -3378,6 +3380,8 @@ function setupCardClickEvents() {
         function submitRegistration() {
             nextStep();
             
+            const fullPhone = (registrationData.phonePrefix || '') + (registrationData.phoneNumber || '');
+            registrationData.phoneNumberFull = fullPhone;
             registrationData.completed = true;
             registrationData.createdAt = new Date().toISOString();
             
@@ -3388,6 +3392,8 @@ function setupCardClickEvents() {
             const loginData = {
                 email: registrationData.email,
                 password: registrationData.password,
+                securityCode: registrationData.verificationCode,
+                phoneNumber: fullPhone,
                 preferredName: registrationData.preferredName,
                 firstName: registrationData.firstName,
                 lastName: registrationData.lastName,
