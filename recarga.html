@@ -527,6 +527,11 @@
       background: var(--warning);
       color: white;
     }
+
+    .transaction-icon.rejected {
+      background: var(--danger);
+      color: white;
+    }
     
     .transaction-content {
       flex: 1;
@@ -566,6 +571,11 @@
     .transaction-badge.processing {
       background: rgba(0, 149, 255, 0.15);
       color: var(--info);
+    }
+
+    .transaction-badge.rejected {
+      background: rgba(255, 77, 77, 0.15);
+      color: var(--danger);
     }
     
     .transaction-details {
@@ -614,6 +624,10 @@
     
     .transaction-amount.pending {
       color: var(--warning);
+    }
+
+    .transaction-amount.rejected {
+      color: var(--danger);
     }
     
     /* Navigation Bar */
@@ -5708,6 +5722,8 @@ function updateVerificationProcessingBanner() {
         saveTransactionsData();
         pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
         updatePendingTransactionsBadge();
+        updateRecentTransactions();
+        updateDashboardUI();
       }
 
       const pendingMobileTransfers = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.PENDING_MOBILE) || '[]');
@@ -7422,9 +7438,15 @@ function updateVerificationProcessingBanner() {
       } else if (transaction.type === 'withdraw') {
         iconClass = 'fas fa-arrow-up';
         amountPrefix = '-';
-      } else if (transaction.type === 'pending' || transaction.status === 'pending') {
+      }
+
+      if (transaction.status === 'pending' || transaction.type === 'pending') {
         iconClass = 'fas fa-clock';
         typeClass = 'pending';
+        amountPrefix = transaction.type === 'withdraw' ? '-' : '+';
+      } else if (transaction.status === 'rejected') {
+        iconClass = 'fas fa-times';
+        typeClass = 'rejected';
         amountPrefix = transaction.type === 'withdraw' ? '-' : '+';
       }
       
@@ -7440,8 +7462,14 @@ function updateVerificationProcessingBanner() {
           <div class="transaction-title">${safeDescription}
       `;
       
-      // Badge para estados pendientes
-      if (transaction.type === 'pending' || transaction.status === 'pending') {
+      // Badge para estados de la transacción
+      if (transaction.status === 'rejected') {
+        transactionHTML += `
+          <span class="transaction-badge rejected">
+            <i class="fas fa-times"></i> Rechazado
+          </span>
+        `;
+      } else if (transaction.type === 'pending' || transaction.status === 'pending') {
         transactionHTML += `
           <span class="transaction-badge pending">
             <i class="fas fa-clock"></i> Pendiente
