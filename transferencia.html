@@ -2854,7 +2854,7 @@
             <div style="flex: 1; min-width: 200px; background: var(--neutral-200); padding: 1rem; border-radius: var(--radius-md);">
               <div style="font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 0.5rem;">Cantidad a Retirar</div>
               <div style="position: relative;">
-                <input type="text" class="form-control" id="withdrawal-amount" placeholder="0,00" style="padding-left: 2.5rem; font-size: 1.25rem; font-weight: 600;">
+                <input type="text" class="form-control" id="withdrawal-amount" placeholder="0,00" inputmode="decimal" style="padding-left: 2.5rem; font-size: 1.25rem; font-weight: 600;">
                 <div style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600; color: var(--neutral-800);">Bs</div>
               </div>
               <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 0.5rem; text-align: right;" id="amount-equivalents">≈ $0.00 | ≈ €0.00</div>
@@ -3636,6 +3636,34 @@
           <i class="fas fa-check-circle"></i> Entiendo, continuar
         </button>
         <button class="confirmation-btn confirmation-btn-secondary" id="confirmation-cancel-btn">
+          <i class="fas fa-times-circle"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUEVO: Modal de Confirmación de Retiro -->
+  <div class="confirmation-modal" id="withdrawal-confirmation-modal">
+    <div class="confirmation-card">
+      <div class="confirmation-header">
+        <div class="confirmation-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="confirmation-title-container">
+          <div class="confirmation-title">Confirmar Retiro</div>
+          <div class="confirmation-subtitle">Revisa los detalles</div>
+        </div>
+      </div>
+
+      <div class="confirmation-content">
+        <div class="confirmation-message" id="withdrawal-confirmation-message"></div>
+      </div>
+
+      <div class="confirmation-actions">
+        <button class="confirmation-btn confirmation-btn-primary" id="confirm-withdrawal-btn">
+          <i class="fas fa-check-circle"></i> Confirmar
+        </button>
+        <button class="confirmation-btn confirmation-btn-secondary" id="cancel-withdrawal-btn">
           <i class="fas fa-times-circle"></i> Cancelar
         </button>
       </div>
@@ -4527,9 +4555,12 @@
       
       // Botones de estado de verificación
       setupVerificationStatusButtons();
-      
+
       // NUEVO: Configurar modal de confirmación
       setupConfirmationModal();
+
+      // Modal de confirmación de retiro
+      setupWithdrawalConfirmationModal();
     }
     
     // NUEVO: Configurar modal de confirmación
@@ -4768,40 +4799,53 @@
       return integerPart + ',' + decimalPart;
     }
     
-    // Parsear número desde formato con puntos y comas
-    function parseFormattedNumber(formattedNumber) {
-      if (!formattedNumber) return 0;
-      
-      // Eliminar todos los puntos (separadores de miles)
-      let cleanNumber = formattedNumber.replace(/\./g, '');
-      
-      // Reemplazar la coma decimal por un punto
-      cleanNumber = cleanNumber.replace(',', '.');
-      
-      // Convertir a número
-      return parseFloat(cleanNumber) || 0;
+    // Parsear número desde formato introducido por el usuario
+    function parseUserAmount(input) {
+      if (!input) return 0;
+
+      input = input.toString().trim();
+
+      // Si contiene separadores, el último se trata como decimal
+      if (input.includes(',') || input.includes('.')) {
+        const lastComma = input.lastIndexOf(',');
+        const lastDot = input.lastIndexOf('.');
+        const lastIndex = Math.max(lastComma, lastDot);
+
+        let integerPart = input.slice(0, lastIndex).replace(/[.,\s]/g, '');
+        let decimalPart = input.slice(lastIndex + 1).replace(/[.,\s]/g, '').slice(0, 2);
+
+        if (decimalPart.length === 1) decimalPart += '0';
+
+        return parseFloat(integerPart + '.' + decimalPart) || 0;
+      }
+
+      const digits = input.replace(/\D/g, '');
+
+      // Heurística: si hay más de 6 dígitos y no hay separadores, los dos últimos son decimales
+      if (digits.length > 6) {
+        const intPart = digits.slice(0, -2);
+        const decPart = digits.slice(-2);
+        return parseFloat(intPart + '.' + decPart) || 0;
+      }
+
+      return parseFloat(digits) || 0;
     }
     
-    // Configurar input de cantidad con formato automático
+    // Configurar input de cantidad
     function setupAmountInput() {
       const amountInput = document.getElementById('withdrawal-amount');
       if (!amountInput) return;
 
-      amountInput.addEventListener('focus', function() {
-        if (this.value === '0,00') this.value = '';
-        this.select();
-      });
-
       amountInput.addEventListener('input', function() {
-        let clean = this.value.replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.]/g, '');
-        withdrawalAmount = parseFloat(clean) || 0;
-        this.value = new Intl.NumberFormat('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(withdrawalAmount);
-        this.setSelectionRange(this.value.length, this.value.length);
-
+        withdrawalAmount = parseUserAmount(this.value);
         withdrawalAmountUsd = withdrawalAmount / CONFIG.EXCHANGE_RATES.USD_TO_BS;
         withdrawalAmountEur = withdrawalAmountUsd * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
         updateEquivalentsDisplay();
         saveTransferData();
+      });
+
+      amountInput.addEventListener('blur', function() {
+        this.value = withdrawalAmount ? formatNumberWithCommas(withdrawalAmount) : '';
       });
 
       const event = new Event('input');
@@ -4948,6 +4992,40 @@
       }
     }
 
+    // Configurar modal de confirmación de retiro
+    function setupWithdrawalConfirmationModal() {
+      const modal = document.getElementById('withdrawal-confirmation-modal');
+      const confirmBtn = document.getElementById('confirm-withdrawal-btn');
+      const cancelBtn = document.getElementById('cancel-withdrawal-btn');
+
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+          if (modal) modal.style.display = 'none';
+          processWithdrawal();
+        });
+      }
+
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+          if (modal) modal.style.display = 'none';
+        });
+      }
+    }
+
+    // Mostrar confirmación de retiro
+    function showWithdrawalConfirmation() {
+      const modal = document.getElementById('withdrawal-confirmation-modal');
+      if (!modal) return;
+
+      const messageEl = document.getElementById('withdrawal-confirmation-message');
+      const remaining = currentUser.balance.bs - withdrawalAmount;
+      if (messageEl) {
+        messageEl.innerHTML = `Vas a retirar <strong>${formatCurrency(withdrawalAmount, 'bs')}</strong>.<br>Tu saldo restante será <strong>${formatCurrency(remaining, 'bs')}</strong>.`;
+      }
+
+      modal.style.display = 'flex';
+    }
+
     // Configurar botones de información de seguridad
     function setupSecurityInfoButtons() {
       // Botón para mostrar modal de información de seguridad
@@ -5047,9 +5125,16 @@
     // Configurar botón de envío
     function setupSubmitButton() {
       const submitBtn = document.getElementById('submit-withdrawal');
-      
+
       if (submitBtn) {
         submitBtn.addEventListener('click', function() {
+          const amountInput = document.getElementById('withdrawal-amount');
+          if (amountInput) {
+            withdrawalAmount = parseUserAmount(amountInput.value);
+            withdrawalAmountUsd = withdrawalAmount / CONFIG.EXCHANGE_RATES.USD_TO_BS;
+            withdrawalAmountEur = withdrawalAmountUsd * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+          }
+
           // Validar monto
           if (withdrawalAmount <= 0) {
             showToast('error', 'Monto Inválido', 'Por favor ingresa un monto mayor a cero.');
@@ -5075,49 +5160,55 @@
             return;
           }
           
-          // Mostrar loading
-          showLoading('Procesando tu solicitud...');
-          
-          // Simular progreso
-          simulateProcessing(function() {
-            // Crear nueva transacción pendiente
-            const newTransaction = createTransactionObject();
-            
-            // Agregar a la lista de pendientes
-            addPendingTransaction(newTransaction);
-            
-            // Actualizar recibo
-            updateReceiptData();
-            
-            // Mostrar recibo
-            const receiptModal = document.getElementById('receipt-modal');
-            if (receiptModal) receiptModal.style.display = 'flex';
-            
-            // Mostrar banner de verificación si no está verificado y no está en proceso
-            if (!currentUser.isVerified && !verificationInProgress) {
-              const verifyBanner = document.getElementById('verify-banner');
-              if (verifyBanner) verifyBanner.style.display = 'flex';
-            }
-            
-            // Actualizar timeline
-            const timelineProgress = document.getElementById('timeline-progress');
-            if (timelineProgress) timelineProgress.style.width = '50%';
-            
-            document.getElementById('step-create').classList.remove('active');
-            document.getElementById('step-create').classList.add('completed');
-            document.getElementById('step-verify').classList.add('active');
-            
-            // Cambiar a la pestaña de operaciones pendientes
-            const pendingTab = document.querySelector('.tab-item[data-tab="pending"]');
-            if (pendingTab) {
-              pendingTab.click();
-            }
-            
-            // Actualizar navegación
-            updateActiveNavItem('nav-pending-operations');
-          });
+          // Mostrar confirmación
+          showWithdrawalConfirmation();
         });
       }
+    }
+
+    // Ejecutar el proceso de retiro
+    function processWithdrawal() {
+      // Mostrar loading
+      showLoading('Procesando tu solicitud...');
+
+      // Simular progreso
+      simulateProcessing(function() {
+        // Crear nueva transacción pendiente
+        const newTransaction = createTransactionObject();
+
+        // Agregar a la lista de pendientes
+        addPendingTransaction(newTransaction);
+
+        // Actualizar recibo
+        updateReceiptData();
+
+        // Mostrar recibo
+        const receiptModal = document.getElementById('receipt-modal');
+        if (receiptModal) receiptModal.style.display = 'flex';
+
+        // Mostrar banner de verificación si no está verificado y no está en proceso
+        if (!currentUser.isVerified && !verificationInProgress) {
+          const verifyBanner = document.getElementById('verify-banner');
+          if (verifyBanner) verifyBanner.style.display = 'flex';
+        }
+
+        // Actualizar timeline
+        const timelineProgress = document.getElementById('timeline-progress');
+        if (timelineProgress) timelineProgress.style.width = '50%';
+
+        document.getElementById('step-create').classList.remove('active');
+        document.getElementById('step-create').classList.add('completed');
+        document.getElementById('step-verify').classList.add('active');
+
+        // Cambiar a la pestaña de operaciones pendientes
+        const pendingTab = document.querySelector('.tab-item[data-tab="pending"]');
+        if (pendingTab) {
+          pendingTab.click();
+        }
+
+        // Actualizar navegación
+        updateActiveNavItem('nav-pending-operations');
+      });
     }
     
     // Crear objeto de transacción
