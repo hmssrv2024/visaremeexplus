@@ -2631,8 +2631,12 @@
       z-index: 1200;
       bottom: 20px;
       right: 20px;
-      visibility: visible !important;
-      display: block !important;
+      visibility: hidden;
+      display: none;
+    }
+
+    .contact-icon.live {
+      background: var(--success);
     }
     
     /* Animations */
@@ -3556,6 +3560,16 @@
           </div>
         </a>
 
+        <a href="#" class="contact-option" id="live-support-btn">
+          <div class="contact-icon live">
+            <i class="fas fa-headset"></i>
+          </div>
+          <div class="contact-content">
+            <div class="contact-title">Soporte en Vivo</div>
+            <div class="contact-description">Habla con un agente</div>
+          </div>
+        </a>
+
         <a href="opinionesremeex.html" class="contact-option">
           <div class="contact-icon reviews">
             <i class="fas fa-star"></i>
@@ -4408,14 +4422,24 @@
 
   <!-- Improved Tawk.to Script Implementation -->
   <script type="text/javascript">
-    // Función para cargar Tawk.to con reintentos
+    // Cargar Tawk.to bajo demanda
+    let tawkLoaded = false;
     function loadTawkTo() {
+      if (tawkLoaded) {
+        ensureTawkToVisibility();
+        if (window.Tawk_API) Tawk_API.maximize();
+        return;
+      }
       var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-      
+
       // Configuración específica de Tawk.to si es necesario
       Tawk_API.onLoad = function(){
-        document.getElementById('tawkto-container').style.display = 'block';
+        const container = document.getElementById('tawkto-container');
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
         console.log('Tawk.to cargado correctamente');
+        if (window.Tawk_API) Tawk_API.maximize();
+        ensureTawkToVisibility();
       };
       
       try {
@@ -4435,20 +4459,16 @@
             loadTawkTo(); // Reintentar si no se cargó
           }
         }, 5000);
+        tawkLoaded = true;
       } catch (e) {
         console.error('Error al cargar Tawk.to:', e);
       }
     }
 
-    // Asegurarse de que el DOM esté completamente cargado antes de iniciar Tawk.to
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadTawkTo);
-    } else {
-      loadTawkTo();
-    }
-
     // Mantener el widget visible (conserva la función existente pero optimizada)
     function ensureTawkToVisibility() {
+      if (!tawkLoaded) return;
+
       const checkInterval = setInterval(function() {
         const tawktoFrame = document.querySelector('iframe[title*="chat"]');
         const tawktoContainer = document.getElementById('tawkto-container');
@@ -4474,8 +4494,7 @@
       }, 1000);
     }
 
-    // Iniciar la verificación de visibilidad después de un breve retraso
-    setTimeout(ensureTawkToVisibility, 2000);
+    // La visibilidad se asegurará cuando se cargue el chat
   </script>
   
   <script>
@@ -4592,8 +4611,7 @@
       // Check for returning from transfer.html
       checkReturnFromTransfer();
       
-      // Asegurar que el chat de Tawk.to esté visible
-      ensureTawkToVisibility();
+
 
       // NUEVA IMPLEMENTACIÓN: Verificar estado de procesamiento de verificación
       checkVerificationProcessingStatus();
@@ -4899,26 +4917,6 @@ function updateVerificationProcessingBanner() {
       }
     }
 
-    // Función para mantener visible el chat de Tawk.to
-    function ensureTawkToVisibility() {
-      // Verificar y corregir la visibilidad cada segundo
-      setInterval(function() {
-        const tawktoFrame = document.querySelector('iframe[title*="chat"]');
-        const tawktoContainer = document.getElementById('tawkto-container');
-        
-        if (tawktoFrame && tawktoContainer) {
-          // Asegurar que el contenedor esté visible
-          tawktoContainer.style.display = 'block';
-          tawktoContainer.style.visibility = 'visible';
-          tawktoContainer.style.zIndex = '1200';
-          
-          // Asegurar que el iframe esté visible
-          tawktoFrame.style.display = 'block';
-          tawktoFrame.style.visibility = 'visible';
-          tawktoFrame.style.zIndex = '1200';
-        }
-      }, 1000);
-    }
 
     // Verificar si regresa de transferencia.html y procesar la información
     function checkReturnFromTransfer() {
@@ -6475,6 +6473,16 @@ function updateVerificationProcessingBanner() {
 
       if (supportClose) {
         supportClose.addEventListener('click', function() {
+          if (supportOverlay) supportOverlay.style.display = 'none';
+          resetInactivityTimer();
+        });
+      }
+
+      const liveSupportBtn = document.getElementById('live-support-btn');
+      if (liveSupportBtn) {
+        liveSupportBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          loadTawkTo();
           if (supportOverlay) supportOverlay.style.display = 'none';
           resetInactivityTimer();
         });
