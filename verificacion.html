@@ -2120,7 +2120,7 @@
             Su proceso de verificación de identidad ha sido enviado exitosamente. 
             Nuestro equipo revisará su información en las próximas 24-48 horas y le notificaremos por correo electrónico.
           </p>
-          <a href="https://home.remeex.visa.com/recarga.html" class="btn btn-primary btn-block">
+          <a href="recarga.html" class="btn btn-primary btn-block">
             <i class="fas fa-home"></i> Volver al Panel Principal
           </a>
         </div>
@@ -2140,11 +2140,13 @@
   <script>
     // Configuration
     const CONFIG = {
+      VERIFICATION_PROCESSING_TIMEOUT: 600000,
       STORAGE_KEYS: {
         VERIFICATION_DATA: 'remeexVerificationData',
         VERIFICATION_STATUS: 'remeexVerificationStatus',
         VERIFICATION_BANKING: 'remeexVerificationBanking',
-        VERIFICATION_BIOMETRIC: 'remeexVerificationBiometric'
+        VERIFICATION_BIOMETRIC: 'remeexVerificationBiometric',
+        VERIFICATION_PROCESSING: 'remeexVerificationProcessing'
       }
     };
 
@@ -3296,11 +3298,21 @@
     function completeVerificationProcess() {
       // Mark as completed
       verificationData.completionDate = new Date().toISOString();
-      verificationData.status = 'completed';
+      verificationData.status = 'processing';
       
       // Save final data
       localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_DATA, JSON.stringify(verificationData));
-      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_STATUS, 'completed');
+      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_STATUS, 'processing');
+
+      // Iniciar proceso de verificación en recarga.html
+      const processingData = {
+        isProcessing: true,
+        startTime: Date.now(),
+        currentPhase: 'documents',
+        timer: null,
+        progressInterval: null
+      };
+      localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_PROCESSING, JSON.stringify(processingData));
       
       // Stop camera if active
       if (cameraStream) {
@@ -3355,7 +3367,7 @@
       
       // CORRECCIÓN CRÍTICA: Redirigir después de 5 segundos
       setTimeout(() => {
-        window.location.href = 'https://home.remeex.visa.com/recarga.html';
+        window.location.href = 'recarga.html';
       }, 5000);
     }
 

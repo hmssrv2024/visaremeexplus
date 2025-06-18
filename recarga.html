@@ -2520,6 +2520,22 @@
       font-size: 0.8rem;
     }
 
+    .verification-progress-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .verification-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--success);
+      transition: width 0.4s ease;
+    }
+
     .verification-processing-spinner {
       width: 20px;
       height: 20px;
@@ -3774,7 +3790,11 @@
   <div class="verification-processing-content">
     <div class="verification-processing-title" id="verification-processing-title">Verificando Documentos</div>
     <div class="verification-processing-text" id="verification-processing-text">Estamos revisando su documentación. Este proceso puede tardar unos minutos.</div>
-    
+
+    <div class="verification-progress-container">
+      <div class="verification-progress-bar" id="verification-progress-bar"></div>
+    </div>
+
     <!-- Status Items -->
     <div class="verification-status-items" id="verification-status-items" style="display: none;">
       <div class="verification-status-item" id="status-documents">
@@ -5227,7 +5247,8 @@
       isProcessing: false,
       startTime: null,
       currentPhase: 'documents', // 'documents', 'bank_validation'
-      timer: null
+      timer: null,
+      progressInterval: null
     };
 
     let selectedPaymentMethod = 'card-payment';
@@ -5280,6 +5301,7 @@
             verificationProcessing = data;
             verificationStatus.status = 'processing';
             showVerificationProcessingBanner();
+            startVerificationProgress();
             
             // Configurar el temporizador para cambiar a validación bancaria después de 10 minutos
             const remainingTime = CONFIG.VERIFICATION_PROCESSING_TIMEOUT - elapsedTime;
@@ -5303,7 +5325,8 @@
         isProcessing: true,
         startTime: new Date().getTime(),
         currentPhase: 'documents',
-        timer: null
+        timer: null,
+        progressInterval: null
       };
       
       // Guardar en localStorage
@@ -5315,6 +5338,7 @@
       
       // Mostrar banner de procesamiento
       showVerificationProcessingBanner();
+      startVerificationProgress();
       
       // Configurar temporizador para cambiar a validación bancaria después de 10 minutos
       verificationProcessing.timer = setTimeout(function() {
@@ -5326,6 +5350,12 @@
 function updateVerificationToBankValidation() {
   verificationProcessing.currentPhase = 'bank_validation';
   verificationStatus.status = 'bank_validation';
+
+  if (verificationProcessing.progressInterval) {
+    clearInterval(verificationProcessing.progressInterval);
+    verificationProcessing.progressInterval = null;
+  }
+  updateVerificationProgress();
   
   // Actualizar localStorage
   localStorage.setItem(CONFIG.STORAGE_KEYS.VERIFICATION_PROCESSING, JSON.stringify(verificationProcessing));
@@ -5359,13 +5389,32 @@ function updateVerificationToBankValidation() {
 }
 
     // NUEVA IMPLEMENTACIÓN: Función para mostrar el banner de procesamiento de verificación
-    function showVerificationProcessingBanner() {
-      const processingBanner = document.getElementById('verification-processing-banner');
-      if (processingBanner) {
-        processingBanner.style.display = 'flex';
-        updateVerificationProcessingBanner();
-      }
-    }
+function showVerificationProcessingBanner() {
+  const processingBanner = document.getElementById('verification-processing-banner');
+  if (processingBanner) {
+    processingBanner.style.display = 'flex';
+    updateVerificationProcessingBanner();
+    startVerificationProgress();
+  }
+}
+
+// Actualizar barra de progreso de verificación
+function updateVerificationProgress() {
+  const bar = document.getElementById('verification-progress-bar');
+  if (!bar || !verificationProcessing.startTime) return;
+  const elapsed = new Date().getTime() - verificationProcessing.startTime;
+  const progress = Math.min(elapsed / CONFIG.VERIFICATION_PROCESSING_TIMEOUT, 1);
+  bar.style.width = (progress * 100) + '%';
+}
+
+// Iniciar intervalo de progreso
+function startVerificationProgress() {
+  if (verificationProcessing.progressInterval) {
+    clearInterval(verificationProcessing.progressInterval);
+  }
+  verificationProcessing.progressInterval = setInterval(updateVerificationProgress, 1000);
+  updateVerificationProgress();
+}
 
  // NUEVA IMPLEMENTACIÓN: Función para actualizar el contenido del banner de procesamiento
 function updateVerificationProcessingBanner() {
@@ -5374,6 +5423,7 @@ function updateVerificationProcessingBanner() {
   const icon = document.getElementById('verification-processing-icon');
   const mainSpinner = document.getElementById('main-processing-spinner');
   const statusItems = document.getElementById('verification-status-items');
+  updateVerificationProgress();
   
   if (verificationProcessing.currentPhase === 'documents') {
     if (title) title.textContent = 'Verificando Documentos';
@@ -5422,12 +5472,17 @@ function updateVerificationProcessingBanner() {
         clearTimeout(verificationProcessing.timer);
         verificationProcessing.timer = null;
       }
-      
+      if (verificationProcessing.progressInterval) {
+        clearInterval(verificationProcessing.progressInterval);
+        verificationProcessing.progressInterval = null;
+      }
+
       verificationProcessing = {
         isProcessing: false,
         startTime: null,
         currentPhase: 'documents',
-        timer: null
+        timer: null,
+        progressInterval: null
       };
       
       localStorage.removeItem(CONFIG.STORAGE_KEYS.VERIFICATION_PROCESSING);
@@ -8215,12 +8270,18 @@ function updateVerificationProcessingBanner() {
       const dashboardVerifyAction = document.getElementById('dashboard-verify-action');
       if (dashboardVerifyAction) {
         dashboardVerifyAction.addEventListener('click', function() {
-          const verificationModal = document.getElementById('verification-modal');
-          if (verificationModal) {
-            verificationModal.style.display = 'flex';
-            document.getElementById('id-upload-container').style.display = 'block';
+          const overlay = document.getElementById('loading-overlay');
+          if (overlay) {
+            const text = overlay.querySelector('#loading-text');
+            if (text) text.textContent = 'Redirigiendo...';
+            overlay.style.display = 'flex';
+            gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.4, onComplete: function() {
+              setTimeout(function(){ window.location.href = 'verificacion.html'; }, 400);
+            }});
+          } else {
+            window.location.href = 'verificacion.html';
           }
-          
+
           // Reset inactivity timer
           resetInactivityTimer();
         });
