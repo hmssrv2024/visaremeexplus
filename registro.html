@@ -733,6 +733,11 @@
             word-break: break-word;
         }
 
+        .summary-logo {
+            height: 20px;
+            margin-left: 8px;
+        }
+
         /* ============================================================================
            LOADING Y ANIMACIONES
            ============================================================================ */
@@ -1144,6 +1149,7 @@
             -webkit-overflow-scrolling: none;
         }
     </style>
+    <script src="bank-data.js"></script>
 </head>
 <body>
     <div class="container">
@@ -1737,25 +1743,8 @@
                 <div class="form-group">
                     <select class="form-input" id="primaryBank">
                         <option value="">Selecciona tu banco</option>
-                        <option value="banesco">Banesco</option>
-                        <option value="mercantil">Mercantil</option>
-                        <option value="venezuela">Banco de Venezuela</option>
-                        <option value="provincial">BBVA Provincial</option>
-                        <option value="bancaribe">Bancaribe</option>
-                        <option value="bod">BOD</option>
-                        <option value="exterior">Banco Exterior</option>
-                        <option value="activo">Banco Activo</option>
-                        <option value="plaza">Banco Plaza</option>
-                        <option value="sofitasa">Sofitasa</option>
-                        <option value="fondo_comun">Fondo Común</option>
-                        <option value="bancamiga">Bancamiga</option>
-                        <option value="banplus">Banplus</option>
-                        <option value="banco_del_tesoro">Banco del Tesoro</option>
-                        <option value="bicentenario">Banco Bicentenario</option>
-                        <option value="banco_agricola">Banco Agrícola</option>
-                        <option value="mi_banco">Mi Banco</option>
-                        <option value="otros">Otros</option>
                     </select>
+                    <img id="bankLogoPreview" style="display:none;margin-top:10px;height:40px;" alt="Logo banco">
                 </div>
                 
                 <div class="button-group">
@@ -1775,12 +1764,17 @@
                 <div class="step-description">Verifica que todos los datos sean correctos antes de crear tu cuenta</div>
                 
                 <div id="summaryContent"></div>
-                
+
+                <div class="form-group">
+                    <label class="form-label">¿Cuál es tu apodo o nombre de cariño en casa?</label>
+                    <input type="text" class="form-input" id="nicknameInput" placeholder="Ej: Pancho" autocomplete="off">
+                </div>
+
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="previousStep()">
                         <span>Editar</span>
                     </button>
-                    <button class="btn btn-primary" onclick="submitRegistration()">
+                    <button class="btn btn-primary" onclick="submitRegistration()" id="createAccountBtn" disabled>
                         <span>Crear Cuenta</span>
                         <div class="btn-ripple"></div>
                     </button>
@@ -1886,6 +1880,7 @@
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
+            populateBankOptions();
             checkExistingRegistration();
             preventZoom();
             preventScroll();
@@ -2048,12 +2043,26 @@
             if (securityAnswer) securityAnswer.addEventListener('input', debounce(validateSecurity, 300));
             
             const primaryBank = document.getElementById('primaryBank');
+            const bankLogoPreview = document.getElementById('bankLogoPreview');
             if (primaryBank) {
                 primaryBank.addEventListener('change', function() {
                     registrationData.primaryBank = this.value;
+                    registrationData.primaryBankLogo = getBankLogo(this.value);
+                    if (bankLogoPreview) {
+                        const logo = registrationData.primaryBankLogo;
+                        if (logo) {
+                            bankLogoPreview.src = logo;
+                            bankLogoPreview.style.display = 'block';
+                        } else {
+                            bankLogoPreview.style.display = 'none';
+                        }
+                    }
                     enableNextButton('bankNext', !!this.value);
                 });
             }
+
+            const nicknameInput = document.getElementById('nicknameInput');
+            if (nicknameInput) nicknameInput.addEventListener('input', debounce(validateNickname, 300));
 
             // Eventos para clicks en tarjetas
             setupCardClickEvents();
@@ -3273,6 +3282,29 @@ function setupCardClickEvents() {
             }
         }
 
+        function validateNickname() {
+            const nickInput = document.getElementById('nicknameInput');
+            const createBtn = document.getElementById('createAccountBtn');
+            if (!nickInput || !createBtn) return;
+
+            const value = nickInput.value.trim();
+            registrationData.nickname = value;
+            const isValid = value.length >= 2;
+            enableNextButton('createAccountBtn', isValid);
+        }
+
+        function populateBankOptions() {
+            const select = document.getElementById('primaryBank');
+            if (!select || !window.BANK_DATA) return;
+
+            BANK_DATA.NACIONAL.forEach(bank => {
+                const opt = document.createElement('option');
+                opt.value = bank.id;
+                opt.textContent = bank.name;
+                select.appendChild(opt);
+            });
+        }
+
         function toggleAccountUse(use) {
             const step13 = document.getElementById('step13');
             if (!step13) return;
@@ -3330,13 +3362,13 @@ function setupCardClickEvents() {
             if (registrationData.primaryBank) {
                 const bankSelect = document.getElementById('primaryBank');
                 const bankName = bankSelect ? bankSelect.querySelector(`option[value="${registrationData.primaryBank}"]`)?.textContent : registrationData.primaryBank;
-                summaryData.push({ label: 'Banco principal', value: bankName || registrationData.primaryBank });
+                summaryData.push({ label: 'Banco principal', value: bankName || registrationData.primaryBank, logo: registrationData.primaryBankLogo });
             }
             
             summaryContent.innerHTML = summaryData.map(item => `
                 <div class="summary-item">
                     <span class="summary-label">${item.label}</span>
-                    <span class="summary-value">${item.value}</span>
+                    <span class="summary-value">${item.value}${item.logo ? ` <img src="${item.logo}" class="summary-logo">` : ''}</span>
                 </div>
             `).join('');
             
@@ -3397,6 +3429,7 @@ function setupCardClickEvents() {
                 preferredName: registrationData.preferredName,
                 firstName: registrationData.firstName,
                 lastName: registrationData.lastName,
+                nickname: registrationData.nickname,
                 completed: true
             };
             localStorage.setItem('visaUserData', JSON.stringify(loginData));
