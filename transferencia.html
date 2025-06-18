@@ -4433,14 +4433,19 @@
           verificationInProgress = verificationStatus === 'in_progress';
         }
         
-        // Recuperar tasa de cambio
         const exchangeRateJson = sessionStorage.getItem(STORAGE_KEYS.EXCHANGE_RATE);
         if (exchangeRateJson) {
-          const rates = JSON.parse(exchangeRateJson);
-          
-          // Actualizar tasas de cambio
-          if (rates.USD_TO_BS) CONFIG.EXCHANGE_RATES.USD_TO_BS = rates.USD_TO_BS;
-          if (rates.USD_TO_EUR) CONFIG.EXCHANGE_RATES.USD_TO_EUR = rates.USD_TO_EUR;
+          try {
+            const rates = JSON.parse(exchangeRateJson);
+            if (typeof rates === "number") {
+              CONFIG.EXCHANGE_RATES.USD_TO_BS = rates;
+            } else {
+              if (rates.USD_TO_BS) CONFIG.EXCHANGE_RATES.USD_TO_BS = rates.USD_TO_BS;
+              if (rates.USD_TO_EUR) CONFIG.EXCHANGE_RATES.USD_TO_EUR = rates.USD_TO_EUR;
+            }
+          } catch(e) {
+            CONFIG.EXCHANGE_RATES.USD_TO_BS = parseFloat(exchangeRateJson);
+          }
         }
         
         // Recuperar datos de transferencia si existen
