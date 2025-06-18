@@ -2120,7 +2120,7 @@
             Su proceso de verificación de identidad ha sido enviado exitosamente. 
             Nuestro equipo revisará su información en las próximas 24-48 horas y le notificaremos por correo electrónico.
           </p>
-          <a href="https://home.remeex.visa.com/recarga.html" class="btn btn-primary btn-block">
+          <a href="#" id="return-dashboard" class="btn btn-primary btn-block">
             <i class="fas fa-home"></i> Volver al Panel Principal
           </a>
         </div>
@@ -2352,6 +2352,13 @@
       document.getElementById('next-step-3').addEventListener('click', () => validateAndProceed(3));
       document.getElementById('prev-step-4').addEventListener('click', () => goToStep(3));
       document.getElementById('complete-verification').addEventListener('click', completeVerification);
+      const returnBtn = document.getElementById('return-dashboard');
+      if (returnBtn) {
+        returnBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          redirectToDashboard();
+        });
+      }
 
       // Form validation
       setupFormValidation();
@@ -3365,7 +3372,7 @@
       
       // CORRECCIÓN CRÍTICA: Redirigir después de 5 segundos
       setTimeout(() => {
-        window.location.href = 'https://home.remeex.visa.com/recarga.html';
+        redirectToDashboard();
       }, 5000);
     }
 
@@ -3391,6 +3398,17 @@
             loadingOverlay.style.display = 'none';
           }
         });
+      }
+    }
+
+    // Redirige al panel principal y cierra la ventana si es un popup
+    function redirectToDashboard() {
+      const targetUrl = 'recarga.html';
+      if (window.opener && !window.opener.closed) {
+        window.opener.location.href = targetUrl;
+        window.close();
+      } else {
+        window.location.href = targetUrl;
       }
     }
 
