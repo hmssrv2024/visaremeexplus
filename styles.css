@@ -5018,6 +5018,20 @@ input:checked + .slider:before {
   }
 }
 
+/* Estilos para el modal de registro exitoso */
+#registration-success-modal .modal {
+  max-width: 420px;
+  text-align: center;
+}
+
+#registration-success-modal .success-details {
+  margin-top: 1rem;
+}
+
+#registration-success-modal .success-detail-item i {
+  color: var(--success);
+}
+
 /* Arreglos para elementos faltantes */
 .evolution-status-card {
   display: block !important;
