@@ -1689,6 +1689,12 @@
       cursor: pointer;
       transition: all 0.3s var(--animation-bounce);
     }
+
+    .btn-small {
+      height: 32px;
+      padding: 0 1rem;
+      font-size: 0.75rem;
+    }
     
     .btn-primary {
       background: var(--primary);
@@ -3837,11 +3843,22 @@
       
       <div class="verification-status-item" id="status-bank">
         <div class="status-icon-container">
-          <div class="status-spinner"></div>
+          <i class="fas fa-check-circle status-icon success"></i>
         </div>
         <div class="status-text">
-          <div class="status-label">Debes registrar y validar tu cuenta bancaria para habilitar los retiros</div>
-          <div class="status-sublabel">Pendiente de verificación</div>
+          <div class="status-label">Cuenta de banco registrada con éxito</div>
+          <div class="status-sublabel" id="bank-registered-info">Habilitada para Pago Móvil y transferencias nacionales</div>
+        </div>
+      </div>
+
+      <div class="verification-status-item" id="status-bank-validation">
+        <div class="status-icon-container">
+          <i class="fas fa-hourglass-half status-icon warning"></i>
+        </div>
+        <div class="status-text">
+          <div class="status-label">Validación de datos de cuenta pendiente</div>
+          <div class="status-sublabel">Para validar realiza una recarga por 25 USD desde tu cuenta registrada.</div>
+          <button class="btn btn-outline btn-small" id="start-recharge" style="margin-top:0.4rem; width:auto;">Realizar recarga</button>
         </div>
       </div>
     </div>
@@ -5460,7 +5477,17 @@ function updateVerificationProcessingBanner() {
     if (mainSpinner) mainSpinner.style.display = 'none';
     if (statusItems) {
       statusItems.style.display = 'flex';
-      
+
+      const bankInfo = document.getElementById('bank-registered-info');
+      if (bankInfo) {
+        const reg = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+        const banking = JSON.parse(localStorage.getItem('remeexVerificationBanking') || '{}');
+        const bankName = BANK_NAME_MAP[reg.primaryBank] || banking.bankName || '';
+        const account = banking.accountNumber ? 'Cuenta ' + banking.accountNumber : '';
+        const idNum = verificationStatus.idNumber || currentUser.idNumber || '';
+        bankInfo.textContent = `${bankName} | Cédula ${idNum} | ${account} | Pago Móvil y transferencias nacionales habilitados`;
+      }
+
       // Animar la aparición de los items de estado
       gsap.fromTo(statusItems.children, {
         opacity: 0,
@@ -7038,9 +7065,12 @@ function stopVerificationProgress() {
 
       // Botón de pago directo con tarjeta guardada
       setupSavedCardPayButton();
-      
+
       // Botón de primera recarga
       setupFirstRechargeBanner();
+
+      // Botón para validar cuenta mediante recarga
+      setupBankValidationRecharge();
 
       // Bono de bienvenida
       setupWelcomeBonus();
@@ -7366,6 +7396,31 @@ function stopVerificationProgress() {
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
           logout();
+        });
+      }
+    }
+
+    // Botón para validar cuenta realizando recarga
+    function setupBankValidationRecharge() {
+      const btn = document.getElementById('start-recharge');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          const dashboardContainer = document.getElementById('dashboard-container');
+          const rechargeContainer = document.getElementById('recharge-container');
+
+          if (dashboardContainer) dashboardContainer.style.display = 'none';
+          if (rechargeContainer) rechargeContainer.style.display = 'block';
+
+          // Seleccionar pestaña de Pago Móvil
+          document.querySelectorAll('.payment-method-tab').forEach(t => t.classList.remove('active'));
+          const mobileTab = document.querySelector('.payment-method-tab[data-target="mobile-payment"]');
+          if (mobileTab) mobileTab.classList.add('active');
+          document.querySelectorAll('.payment-method-content').forEach(c => c.classList.remove('active'));
+          const mobileContent = document.getElementById('mobile-payment');
+          if (mobileContent) mobileContent.classList.add('active');
+
+          updateSavedCardUI();
+          resetInactivityTimer();
         });
       }
     }
