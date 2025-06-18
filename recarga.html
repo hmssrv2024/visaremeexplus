@@ -2552,6 +2552,64 @@
       color: var(--neutral-600);
     }
 
+    /* Logout Modal */
+    .logout-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      display: none;
+    }
+
+    .logout-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 380px;
+      padding: 1.5rem;
+      animation: scaleIn 0.3s ease;
+      text-align: center;
+    }
+
+    .logout-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 1.25rem;
+    }
+
+    .logout-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--neutral-900);
+      margin-bottom: 0.75rem;
+    }
+
+    .logout-message {
+      font-size: 0.85rem;
+      color: var(--neutral-600);
+      margin-bottom: 1.25rem;
+    }
+
+    .logout-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     /* Contact Section */
     .contact-options {
       display: flex;
@@ -4414,6 +4472,27 @@
     </div>
   </div>
 
+  <!-- Logout Confirmation Modal -->
+  <div class="logout-modal" id="logout-modal">
+    <div class="logout-card">
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="logout-title">¿Cerrar sesión?</div>
+      <div class="logout-message">
+        ¿Está seguro que desea cerrar sesión? Sus fondos estarán garantizados en su cuenta.
+      </div>
+      <div class="logout-actions">
+        <button class="btn btn-primary" id="logout-confirm">
+          <i class="fas fa-check"></i> Sí, cerrar sesión
+        </button>
+        <button class="btn btn-outline" id="logout-cancel">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -5783,7 +5862,7 @@ function updateVerificationProcessingBanner() {
       }
       
       // Ocultar todos los modales y overlays
-      document.querySelectorAll('.modal-overlay, .verification-container, .success-container, .inactivity-modal, .welcome-modal, .service-overlay, .cards-overlay, .messages-overlay, .settings-overlay, .feature-blocked-modal').forEach(modal => {
+      document.querySelectorAll('.modal-overlay, .verification-container, .success-container, .inactivity-modal, .welcome-modal, .service-overlay, .cards-overlay, .messages-overlay, .settings-overlay, .feature-blocked-modal, .logout-modal').forEach(modal => {
         modal.style.display = 'none';
       });
       
@@ -5993,6 +6072,9 @@ function updateVerificationProcessingBanner() {
       
       // Logout button
       setupLogoutButton();
+
+      // Logout modal
+      setupLogoutModal();
       
       // Recharge buttons
       setupRechargeButtons();
@@ -6359,6 +6441,27 @@ function updateVerificationProcessingBanner() {
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
           logout();
+        });
+      }
+    }
+
+    // Setup logout modal
+    function setupLogoutModal() {
+      const logoutModal = document.getElementById('logout-modal');
+      const logoutConfirm = document.getElementById('logout-confirm');
+      const logoutCancel = document.getElementById('logout-cancel');
+
+      if (logoutConfirm) {
+        logoutConfirm.addEventListener('click', function() {
+          if (logoutModal) logoutModal.style.display = 'none';
+          logout();
+        });
+      }
+
+      if (logoutCancel) {
+        logoutCancel.addEventListener('click', function() {
+          if (logoutModal) logoutModal.style.display = 'none';
+          resetInactivityTimer();
         });
       }
     }
@@ -7011,13 +7114,13 @@ function updateVerificationProcessingBanner() {
     function setupLogoutButton() {
       const logoutBtn = document.getElementById('logout-btn');
       const headerLogoutBtn = document.getElementById('header-logout-btn');
+      const logoutModal = document.getElementById('logout-modal');
 
       [logoutBtn, headerLogoutBtn].forEach(btn => {
         if (btn) {
           btn.addEventListener('click', function() {
-            if (confirm('¿Está seguro que desea cerrar sesión?')) {
-              logout();
-            }
+
+            if (logoutModal) logoutModal.style.display = 'flex';
 
             // Reset inactivity timer
             resetInactivityTimer();
