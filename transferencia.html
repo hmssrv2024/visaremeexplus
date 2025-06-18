@@ -3705,7 +3705,8 @@
         REFERRER: 'remeexReferrer',
         TRANSACTION_HISTORY: 'remeexTransactionHistory',
         PENDING_TRANSACTIONS: 'remeexPendingTransactions',
-        VERIFICATION_CONFIRMATION: 'remeexVerificationConfirmed' // NUEVO: guarda si el usuario confirmó la verificación
+        VERIFICATION_CONFIRMATION: 'remeexVerificationConfirmed', // NUEVO: guarda si el usuario confirmó la verificación
+        HISTORY_INITIALIZED: 'remeexHistoryInitialized'
       },
       LIMITS: {
         MOBILE: 250000, // 250,000 Bs
@@ -4066,10 +4067,11 @@
       try {
         // Cargar historial de sessionStorage
         const historyJson = sessionStorage.getItem(CONFIG.STORAGE_KEYS.TRANSACTION_HISTORY);
+        const seeded = sessionStorage.getItem(CONFIG.STORAGE_KEYS.HISTORY_INITIALIZED);
         if (historyJson) {
           transactionHistory = JSON.parse(historyJson);
-        } else {
-          // Crear historial de ejemplo solo si no existe
+        } else if (!seeded) {
+          // Crear historial de ejemplo solo la primera vez
           transactionHistory = [
             {
               id: 'RET-54321',
@@ -4093,17 +4095,18 @@
               formattedDate: '01/05/2025 • 09:45'
             }
           ];
-          
-          // Guardar en sessionStorage
           sessionStorage.setItem(CONFIG.STORAGE_KEYS.TRANSACTION_HISTORY, JSON.stringify(transactionHistory));
+          sessionStorage.setItem(CONFIG.STORAGE_KEYS.HISTORY_INITIALIZED, '1');
+        } else {
+          transactionHistory = [];
         }
         
         // Cargar transacciones pendientes
         const pendingJson = sessionStorage.getItem(CONFIG.STORAGE_KEYS.PENDING_TRANSACTIONS);
         if (pendingJson) {
           pendingTransactions = JSON.parse(pendingJson);
-        } else {
-          // Crear pendientes de ejemplo solo si no existe
+        } else if (!seeded) {
+          // Crear pendientes de ejemplo solo la primera vez
           pendingTransactions = [
             {
               id: 'RET-12345',
@@ -4126,8 +4129,6 @@
               formattedDate: '06/05/2025'
             }
           ];
-          
-          // Guardar en sessionStorage
           sessionStorage.setItem(CONFIG.STORAGE_KEYS.PENDING_TRANSACTIONS, JSON.stringify(pendingTransactions));
         }
         

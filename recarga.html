@@ -165,6 +165,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      border: 2px solid #fff;
     }
     
     /* Connected Users Badge */
@@ -1149,6 +1150,12 @@
       margin-bottom: 1rem;
     }
 
+    .exchange-info {
+      font-size: 0.85rem;
+      color: var(--neutral-600);
+      margin-bottom: 1rem;
+    }
+
     .exchange-title {
       font-size: 1.25rem;
       font-weight: 700;
@@ -1206,6 +1213,34 @@
       margin-top: 1rem;
       text-align: center;
       font-size: 0.9rem;
+    }
+
+    /* Transfer Overlay */
+    .transfer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .transfer-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--neutral-100);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: slideUp 0.4s ease;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     /* Support Overlay */
@@ -1387,16 +1422,18 @@
     }
 
     .savings-pot {
-      background: var(--neutral-200);
+      background: linear-gradient(135deg, var(--neutral-200), var(--neutral-100));
       border-radius: var(--radius-md);
       padding: 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: var(--shadow-sm);
     }
 
     .savings-actions button {
       margin-left: 0.5rem;
+      border-radius: var(--radius-md);
     }
     
     /* Login Page */
@@ -3914,6 +3951,7 @@
         <div class="exchange-title">Intercambio</div>
         <div class="exchange-close" id="exchange-close"><i class="fas fa-times"></i></div>
       </div>
+      <p class="exchange-info">Envía y recibe fondos instantáneamente entre usuarios REMEEX. Tus operaciones se guardan y podrás retomarlas cuando quieras.</p>
       <div class="exchange-nav">
         <button class="exchange-tab active" data-tab="send">Enviar</button>
         <button class="exchange-tab" data-tab="request">Solicitar</button>
@@ -7441,6 +7479,28 @@ function updateVerificationProcessingBanner() {
         send: document.getElementById('send-form'),
         request: document.getElementById('request-form')
       };
+      const sendEmailInput = document.getElementById('send-email');
+      const sendAmountInput = document.getElementById('send-amount');
+      const requestEmailInput = document.getElementById('request-email');
+      const requestAmountInput = document.getElementById('request-amount');
+
+      if (sendEmailInput) sendEmailInput.value = sessionStorage.getItem('exchangeSendEmail') || '';
+      if (sendAmountInput) sendAmountInput.value = sessionStorage.getItem('exchangeSendAmount') || '';
+      if (requestEmailInput) requestEmailInput.value = sessionStorage.getItem('exchangeRequestEmail') || '';
+      if (requestAmountInput) requestAmountInput.value = sessionStorage.getItem('exchangeRequestAmount') || '';
+
+      [sendEmailInput, sendAmountInput].forEach(el => {
+        if (el) el.addEventListener('input', () => {
+          sessionStorage.setItem('exchangeSendEmail', sendEmailInput.value);
+          sessionStorage.setItem('exchangeSendAmount', sendAmountInput.value);
+        });
+      });
+      [requestEmailInput, requestAmountInput].forEach(el => {
+        if (el) el.addEventListener('input', () => {
+          sessionStorage.setItem('exchangeRequestEmail', requestEmailInput.value);
+          sessionStorage.setItem('exchangeRequestAmount', requestAmountInput.value);
+        });
+      });
 
       if (exchangeItem) {
         exchangeItem.addEventListener('click', function() {
@@ -7503,7 +7563,7 @@ function updateVerificationProcessingBanner() {
             amountBs: amount * CONFIG.EXCHANGE_RATES.USD_TO_BS,
             amountEur: amount * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
             date: getCurrentDateTime(),
-            description: 'Envío a Patrick',
+            description: 'Envío a Patrick Alistair D\u00B4Lavangart Kors',
             status: 'completed'
           });
           sendStatus.innerHTML = '<div class="spinner"></div>Código para Patrick: <strong>454132A</strong>';
@@ -7546,7 +7606,7 @@ function updateVerificationProcessingBanner() {
               amountBs: amt * CONFIG.EXCHANGE_RATES.USD_TO_BS,
               amountEur: amt * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
               date: getCurrentDateTime(),
-              description: 'Recibido de Patrick',
+              description: 'Recibido de Patrick Alistair D\u00B4Lavangart Kors',
               status: 'completed'
             });
             requestStatus.textContent = 'Monto acreditado.';
@@ -9955,7 +10015,7 @@ function updateVerificationProcessingBanner() {
     updateExchangeRate(CONFIG.EXCHANGE_RATES.USD_TO_BS);
   </script>
 
-  <div id="transfer-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; z-index:10000;"></div>
+  <div id="transfer-overlay" class="transfer-overlay"></div>
   <script src="spa.js"></script>
   <script>
     (function() {
