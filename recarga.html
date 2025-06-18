@@ -1302,17 +1302,21 @@
     }
 
     .support-container {
-      text-align: center;
-      margin-top: 1.5rem;
-      position: relative;
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      margin-top: 0;
+      text-align: right;
+      z-index: 1000;
     }
 
     .support-menu {
       display: none;
       position: absolute;
-      top: 110%;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 110%;
+      right: 0;
+      left: auto;
+      transform: none;
       background: var(--neutral-100);
       border: 1px solid var(--neutral-300);
       border-radius: var(--radius-md);
@@ -3403,20 +3407,21 @@
         <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
       </button>
       
-      <div class="support-container">
-        <button class="btn btn-outline" id="support-btn"><i class="fas fa-headset"></i> Soporte</button>
-        <div class="support-menu" id="support-menu">
-          <a href="https://wa.me/+17373018059" class="support-option whatsapp-link" target="_blank">Soporte y ayuda</a>
-          <div class="support-option" id="access-issues-btn">Tengo problemas para acceder</div>
-          <div class="access-submenu" id="access-submenu">
-            <div class="access-option" id="forgot-password">Olvidé mi contraseña de inicio de sesión</div>
-            <div class="access-option" id="missing-code">No tengo mi código visa de 20 dígitos</div>
-          </div>
-        </div>
-      </div>
 
       <div style="text-align:center; margin-top:1rem;">
         <a href="https://home.remeexvisa.com" target="_blank" class="btn btn-outline">Ir a Remeex Visa</a>
+      </div>
+    </div>
+
+    <div class="support-container">
+      <button class="btn btn-outline" id="support-btn"><i class="fas fa-headset"></i> Soporte</button>
+      <div class="support-menu" id="support-menu">
+        <a href="https://wa.me/+17373018059" class="support-option whatsapp-link" target="_blank">Soporte y ayuda</a>
+        <div class="support-option" id="access-issues-btn">Tengo problemas para acceder</div>
+        <div class="access-submenu" id="access-submenu">
+          <div class="access-option" id="forgot-password">Olvidé mi contraseña de inicio de sesión</div>
+          <div class="access-option" id="missing-code">No tengo mi código visa de 20 dígitos</div>
+        </div>
       </div>
     </div>
   </div>
@@ -7900,7 +7905,13 @@ function updateVerificationProcessingBanner() {
       if (bankEl) bankEl.textContent = bankName;
 
       const banking = JSON.parse(localStorage.getItem('remeexVerificationBanking') || '{}');
-      if (accEl) accEl.textContent = banking.accountNumber || '';
+      if (accEl) {
+        if (banking.accountNumber) {
+          accEl.textContent = banking.accountNumber;
+        } else {
+          accEl.textContent = `Pendiente de validación por parte de ${currentUser.name || ''}`;
+        }
+      }
       if (logoEl) {
         logoEl.innerHTML = banking.bankLogo ? `<img src="${banking.bankLogo}" alt="Logo" style="height:20px">` : '';
       }
