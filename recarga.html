@@ -4821,12 +4821,6 @@
       // Storage event listener para sincronizar múltiples pestañas
       window.addEventListener('storage', handleStorageChange);
       
-      // Before unload handler
-      window.addEventListener('beforeunload', function() {
-        // Eliminar datos de sesión, mantener solo el balance
-        clearSessionData();
-      });
-      
       // Check for returning from transfer.html
       checkReturnFromTransfer();
       
@@ -5139,6 +5133,28 @@ function updateVerificationProcessingBanner() {
 
     // Verificar si regresa de transferencia.html y procesar la información
     function checkReturnFromTransfer() {
+  const pendingJson = sessionStorage.getItem("remeexPendingTransactions");
+  if (pendingJson) {
+    try {
+      const list = JSON.parse(pendingJson);
+      list.forEach(tx => {
+        if (!currentUser.transactions.some(t => t.reference === tx.id)) {
+          const amountUsd = tx.method === "international" ? parseFloat(tx.amount) : parseFloat(tx.amount) / CONFIG.EXCHANGE_RATES.USD_TO_BS;
+          addTransaction({
+            type: "withdraw",
+            reference: tx.id,
+            amount: amountUsd,
+            amountBs: amountUsd * CONFIG.EXCHANGE_RATES.USD_TO_BS,
+            amountEur: amountUsd * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
+            date: getCurrentDateTime(),
+            description: tx.method === "mobile" ? "Retiro a Pago Móvil" : (tx.method === "bank" ? `Retiro a ${tx.bankName}` : `Retiro Internacional - ${tx.bankName}`),
+            status: "pending",
+            destination: tx.destination
+          });
+        }
+      });
+    } catch(e) { console.error("Error processing pending transactions from session:", e); }
+  }
       const transferData = JSON.parse(sessionStorage.getItem(CONFIG.STORAGE_KEYS.TRANSFER_DATA) || 'null');
       
       if (transferData) {
@@ -5801,7 +5817,7 @@ function updateVerificationProcessingBanner() {
       sessionStorage.setItem(CONFIG.SESSION_KEYS.BALANCE, JSON.stringify(currentUser.balance));
       
       // Guardar tasa de cambio actual
-      sessionStorage.setItem(CONFIG.SESSION_KEYS.EXCHANGE_RATE, CONFIG.EXCHANGE_RATES.USD_TO_BS.toString());
+      sessionStorage.setItem(CONFIG.SESSION_KEYS.EXCHANGE_RATE, JSON.stringify(CONFIG.EXCHANGE_RATES));
       
       // Guardar ID del dispositivo
       sessionStorage.setItem('remeexDeviceId', currentUser.deviceId);
