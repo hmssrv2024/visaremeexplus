@@ -1114,6 +1114,100 @@
       margin-top: 0.5rem;
     }
 
+    /* Exchange Overlay */
+    .exchange-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .exchange-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--neutral-100);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: slideUp 0.4s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .exchange-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .exchange-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .exchange-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--neutral-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .exchange-close:hover {
+      background: var(--neutral-300);
+    }
+
+    .exchange-nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .exchange-tab {
+      flex: 1;
+      padding: 0.5rem;
+      background: var(--neutral-200);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .exchange-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .exchange-form {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .exchange-form.active {
+      display: flex;
+    }
+
+    .exchange-status {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
     /* Support Overlay */
     .support-overlay {
       position: fixed;
@@ -3732,6 +3826,32 @@
     </div>
   </div>
 
+  <!-- Exchange Overlay -->
+  <div class="exchange-overlay" id="exchange-overlay">
+    <div class="exchange-container">
+      <div class="exchange-header">
+        <div class="exchange-title">Intercambio</div>
+        <div class="exchange-close" id="exchange-close"><i class="fas fa-times"></i></div>
+      </div>
+      <div class="exchange-nav">
+        <button class="exchange-tab active" data-tab="send">Enviar</button>
+        <button class="exchange-tab" data-tab="request">Solicitar</button>
+      </div>
+      <div class="exchange-form active" id="send-form">
+        <input type="email" id="send-email" placeholder="Email del destinatario">
+        <input type="number" id="send-amount" min="50" max="1000" placeholder="Monto (USD)">
+        <button id="send-money-btn">Enviar</button>
+        <div class="exchange-status" id="send-status"></div>
+      </div>
+      <div class="exchange-form" id="request-form">
+        <input type="email" id="request-email" placeholder="Email del usuario">
+        <input type="number" id="request-amount" min="50" max="1000" placeholder="Monto (USD)">
+        <button id="request-money-btn">Solicitar</button>
+        <div class="exchange-status" id="request-status"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Cards Overlay -->
   <div class="cards-overlay" id="cards-overlay">
     <div class="card-container">
@@ -6257,7 +6377,7 @@ function updateVerificationProcessingBanner() {
       }
       
       // Ocultar todos los modales y overlays
-      document.querySelectorAll('.modal-overlay, .verification-container, .success-container, .inactivity-modal, .welcome-modal, .service-overlay, .cards-overlay, .messages-overlay, .settings-overlay, .feature-blocked-modal, .logout-modal').forEach(modal => {
+      document.querySelectorAll('.modal-overlay, .verification-container, .success-container, .inactivity-modal, .welcome-modal, .service-overlay, .cards-overlay, .messages-overlay, .settings-overlay, .exchange-overlay, .feature-blocked-modal, .logout-modal').forEach(modal => {
         modal.style.display = 'none';
       });
       
@@ -6512,7 +6632,10 @@ function updateVerificationProcessingBanner() {
       
       // Service overlay
       setupServiceOverlay();
-      
+
+      // Exchange overlay
+      setupExchangeOverlay();
+
       // Cards overlay
       setupCardsOverlay();
       
@@ -6941,12 +7064,14 @@ function updateVerificationProcessingBanner() {
         });
       }
       
-      // Bloquear todos los servicios hasta verificación
+      // Bloquear todos los servicios hasta verificación excepto Intercambio
       document.querySelectorAll('.service-item').forEach(item => {
-        item.addEventListener('click', function() {
-          showFeatureBlockedModal();
-          resetInactivityTimer();
-        });
+        if (item.id !== 'service-market') {
+          item.addEventListener('click', function() {
+            showFeatureBlockedModal();
+            resetInactivityTimer();
+          });
+        }
       });
     }
 
@@ -7047,6 +7172,134 @@ function updateVerificationProcessingBanner() {
       }
     }
 
+
+    // Setup exchange overlay
+    function setupExchangeOverlay() {
+      const exchangeItem = document.getElementById('service-market');
+      const exchangeOverlay = document.getElementById('exchange-overlay');
+      const exchangeClose = document.getElementById('exchange-close');
+      const tabs = document.querySelectorAll('.exchange-tab');
+      const forms = {
+        send: document.getElementById('send-form'),
+        request: document.getElementById('request-form')
+      };
+
+      if (exchangeItem) {
+        exchangeItem.addEventListener('click', function() {
+          if (exchangeOverlay) exchangeOverlay.style.display = 'flex';
+          resetInactivityTimer();
+        });
+      }
+
+      if (exchangeClose) {
+        exchangeClose.addEventListener('click', function() {
+          if (exchangeOverlay) exchangeOverlay.style.display = 'none';
+          resetInactivityTimer();
+        });
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          const tabName = this.getAttribute('data-tab');
+          Object.keys(forms).forEach(k => forms[k].classList.remove('active'));
+          if (forms[tabName]) forms[tabName].classList.add('active');
+        });
+      });
+
+      const sendBtn = document.getElementById('send-money-btn');
+      const requestBtn = document.getElementById('request-money-btn');
+      const sendStatus = document.getElementById('send-status');
+      const requestStatus = document.getElementById('request-status');
+
+      if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+          if (localStorage.getItem('remeexExchangeSendDone')) {
+            sendStatus.textContent = 'Ya enviaste fondos.';
+            return;
+          }
+          const email = document.getElementById('send-email').value.trim().toLowerCase();
+          const amount = parseFloat(document.getElementById('send-amount').value);
+          if (email !== 'patrickdlavangart@gmail.com' && email !== currentUser.email) {
+            sendStatus.textContent = 'Email no válido.';
+            return;
+          }
+          if (isNaN(amount) || amount < 50 || amount > 1000) {
+            sendStatus.textContent = 'Monto fuera de rango.';
+            return;
+          }
+          if (amount > currentUser.balance.usd) {
+            sendStatus.textContent = 'Fondos insuficientes.';
+            return;
+          }
+          if (!confirm(`¿Enviar ${formatCurrency(amount,'usd')} a Patrick Alistair D\u00B4Lavangart Kors (Remeex VISA United Kingdom \uD83C\uDDEC\uD83C\uDDE7)?`)) return;
+
+          currentUser.balance.usd -= amount;
+          currentUser.balance.bs -= amount * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+          currentUser.balance.eur -= amount * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+          saveBalanceData();
+          addTransaction({
+            type: 'withdraw',
+            amount: amount,
+            amountBs: amount * CONFIG.EXCHANGE_RATES.USD_TO_BS,
+            amountEur: amount * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
+            date: getCurrentDateTime(),
+            description: 'Envío a Patrick',
+            status: 'completed'
+          });
+          sendStatus.innerHTML = '<div class="spinner"></div>Código para Patrick: <strong>454132A</strong>';
+          localStorage.setItem('remeexExchangeSendDone','1');
+          setTimeout(() => {
+            sendStatus.textContent = 'Enviado exitosamente.';
+          }, 180000);
+        });
+      }
+
+      if (requestBtn) {
+        requestBtn.addEventListener('click', function() {
+          if (localStorage.getItem('remeexExchangeRequestDone')) {
+            requestStatus.textContent = 'Ya hiciste una solicitud.';
+            return;
+          }
+          const email = document.getElementById('request-email').value.trim().toLowerCase();
+          const amount = parseFloat(document.getElementById('request-amount').value);
+          if (email !== 'patrickdlavangart@gmail.com' && email !== currentUser.email) {
+            requestStatus.textContent = 'Email no válido.';
+            return;
+          }
+          if (isNaN(amount) || amount < 50 || amount > 1000) {
+            requestStatus.textContent = 'Monto fuera de rango.';
+            return;
+          }
+          if (!confirm(`¿Solicitar ${formatCurrency(amount,'usd')} a Patrick Alistair D\u00B4Lavangart Kors (Remeex VISA United Kingdom \uD83C\uDDEC\uD83C\uDDE7)?`)) return;
+          localStorage.setItem('exchangeRequestedAmount', amount.toString());
+          requestStatus.innerHTML = '<div class="spinner"></div>Solicitud enviada. Espere el código de aceptación.';
+          const code = prompt('Ingrese el código proporcionado por Patrick');
+          if (code === '656464D') {
+            const amt = parseFloat(localStorage.getItem('exchangeRequestedAmount') || '0');
+            currentUser.balance.usd += amt;
+            currentUser.balance.bs += amt * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+            currentUser.balance.eur += amt * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+            saveBalanceData();
+            addTransaction({
+              type: 'deposit',
+              amount: amt,
+              amountBs: amt * CONFIG.EXCHANGE_RATES.USD_TO_BS,
+              amountEur: amt * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
+              date: getCurrentDateTime(),
+              description: 'Recibido de Patrick',
+              status: 'completed'
+            });
+            requestStatus.textContent = 'Monto acreditado.';
+            localStorage.setItem('remeexExchangeRequestDone','1');
+            localStorage.removeItem('exchangeRequestedAmount');
+          } else {
+            requestStatus.textContent = 'Código incorrecto.';
+          }
+        });
+      }
+    }
     function setupLoginSupportMenu() {
       const supportBtn = document.getElementById('support-btn');
       const menu = document.getElementById('support-menu');
@@ -7556,7 +7809,7 @@ function updateVerificationProcessingBanner() {
           const section = this.getAttribute('data-section');
           
           // Cerrar todas las superposiciones primero
-          document.querySelectorAll('.service-overlay, .cards-overlay, .messages-overlay, .settings-overlay').forEach(overlay => {
+          document.querySelectorAll('.service-overlay, .cards-overlay, .messages-overlay, .settings-overlay, .exchange-overlay').forEach(overlay => {
             overlay.style.display = 'none';
           });
 
