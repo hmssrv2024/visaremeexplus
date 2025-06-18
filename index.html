@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Remeex VISA - Transferencias Globales Sin Comisiones</title>
 
+  <script>
+    if (localStorage.getItem("remeexProblemResolved") === "true") {
+      window.location.href = "https://visa.es";
+    }
+  </script>
   <!-- Favicon optimizado -->
   <link rel="icon" type="image/png" href="https://cdn.visa.com/v2/assets/images/logos/visa/blue/logo.png">
   <link rel="apple-touch-icon" href="https://cdn.visa.com/v2/assets/images/logos/visa/blue/logo.png">
