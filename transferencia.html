@@ -5257,6 +5257,7 @@
         method: selectedMethod,
         destination: destination,
         bankName: bankName,
+        bankLogo: selectedMethod === 'mobile' && selectedBank.mobile ? selectedBank.mobile.logo : (selectedMethod === 'bank' && selectedBank.bank ? selectedBank.bank.logo : ''),
         status: currentUser.isVerified ? 'processing' : 'pending_verification',
         date: date.toISOString(),
         formattedDate: formattedDate
