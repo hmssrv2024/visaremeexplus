@@ -1045,6 +1045,63 @@
       margin-top: 0.5rem;
     }
 
+    /* Support Overlay */
+    .support-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .support-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--neutral-100);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: slideUp 0.4s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .support-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .support-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--neutral-900);
+    }
+
+    .support-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--neutral-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-base);
+    }
+
+    .support-close:hover {
+      background: var(--neutral-300);
+    }
+
     /* Settings Overlay */
     .settings-overlay {
       position: fixed;
@@ -3275,54 +3332,6 @@
           </div>
         </div>
         
-        <!-- Contact Section -->
-        <div class="card">
-          <div class="section-title" style="margin-bottom: 1rem;">
-            <i class="fas fa-headset"></i> Soporte y Ayuda
-          </div>
-          
-          <div class="contact-options">
-            <a href="https://wa.me/+17373018059" class="contact-option" target="_blank">
-              <div class="contact-icon whatsapp">
-                <i class="fab fa-whatsapp"></i>
-              </div>
-              <div class="contact-content">
-                <div class="contact-title">WhatsApp</div>
-                <div class="contact-description">Atención 24/7 vía chat</div>
-              </div>
-            </a>
-            
-            <a href="mailto:contactcenter@visa.com" class="contact-option">
-              <div class="contact-icon email">
-                <i class="fas fa-envelope"></i>
-              </div>
-              <div class="contact-content">
-                <div class="contact-title">Correo Electrónico</div>
-                <div class="contact-description">contactcenter@visa.com</div>
-              </div>
-            </a>
-
-            <a href="fororemeex.html" class="contact-option">
-              <div class="contact-icon chat">
-                <i class="fas fa-comments"></i>
-              </div>
-              <div class="contact-content">
-                <div class="contact-title">Chat con Usuarios</div>
-                <div class="contact-description">Conéctate con la comunidad</div>
-              </div>
-            </a>
-          
-            <a href="opinionesremeex.html" class="contact-option">
-              <div class="contact-icon reviews">
-                <i class="fas fa-star"></i>
-              </div>
-              <div class="contact-content">
-                <div class="contact-title">Opiniones</div>
-                <div class="contact-description">Experiencias de usuarios</div>
-              </div>
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -3344,9 +3353,9 @@
       <div class="nav-label">Inicio</div>
     </div>
     
-    <div class="nav-item" data-section="messages">
-      <div class="nav-icon"><i class="fas fa-envelope"></i></div>
-      <div class="nav-label">Mensajes</div>
+    <div class="nav-item" data-section="support">
+      <div class="nav-icon"><i class="fas fa-headset"></i></div>
+      <div class="nav-label">Soporte &amp; Ayuda</div>
     </div>
 
     <div class="nav-item" data-section="settings">
@@ -3504,6 +3513,58 @@
           <div class="message-text">Para mayor seguridad, le recomendamos activar la autenticación de dos factores en su perfil.</div>
           <div class="message-time">Hoy, 10:35 AM</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Overlay -->
+  <div class="support-overlay" id="support-overlay">
+    <div class="support-container">
+      <div class="support-header">
+        <div class="support-title">Soporte y Ayuda</div>
+        <div class="support-close" id="support-close"><i class="fas fa-times"></i></div>
+      </div>
+
+      <div class="contact-options">
+        <a href="https://wa.me/+17373018059" class="contact-option" target="_blank">
+          <div class="contact-icon whatsapp">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <div class="contact-content">
+            <div class="contact-title">WhatsApp</div>
+            <div class="contact-description">Atención 24/7 vía chat</div>
+          </div>
+        </a>
+
+        <a href="mailto:contactcenter@visa.com" class="contact-option">
+          <div class="contact-icon email">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="contact-content">
+            <div class="contact-title">Correo Electrónico</div>
+            <div class="contact-description">contactcenter@visa.com</div>
+          </div>
+        </a>
+
+        <a href="fororemeex.html" class="contact-option">
+          <div class="contact-icon chat">
+            <i class="fas fa-comments"></i>
+          </div>
+          <div class="contact-content">
+            <div class="contact-title">Chat con Usuarios</div>
+            <div class="contact-description">Conéctate con la comunidad</div>
+          </div>
+        </a>
+
+        <a href="opinionesremeex.html" class="contact-option">
+          <div class="contact-icon reviews">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="contact-content">
+            <div class="contact-title">Opiniones</div>
+            <div class="contact-description">Experiencias de usuarios</div>
+          </div>
+        </a>
       </div>
     </div>
   </div>
@@ -5970,7 +6031,10 @@ function updateVerificationProcessingBanner() {
       
       // Messages overlay
       setupMessagesOverlay();
-      
+
+      // Support overlay
+      setupSupportOverlay();
+
       // Settings overlay
       setupSettingsOverlay();
       
@@ -6391,6 +6455,27 @@ function updateVerificationProcessingBanner() {
       if (messagesClose) {
         messagesClose.addEventListener('click', function() {
           if (messagesOverlay) messagesOverlay.style.display = 'none';
+          resetInactivityTimer();
+        });
+      }
+    }
+
+    // Setup support overlay
+    function setupSupportOverlay() {
+      const supportNav = document.querySelector('.nav-item[data-section="support"]');
+      const supportOverlay = document.getElementById('support-overlay');
+      const supportClose = document.getElementById('support-close');
+
+      if (supportNav) {
+        supportNav.addEventListener('click', function() {
+          if (supportOverlay) supportOverlay.style.display = 'flex';
+          resetInactivityTimer();
+        });
+      }
+
+      if (supportClose) {
+        supportClose.addEventListener('click', function() {
+          if (supportOverlay) supportOverlay.style.display = 'none';
           resetInactivityTimer();
         });
       }
