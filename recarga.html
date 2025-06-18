@@ -8752,6 +8752,8 @@ function stopVerificationProgress() {
       const safeDescription = escapeHTML(transaction.description);
       const safeDate = escapeHTML(transaction.date);
       
+      const safeFirstName = currentUser.name ? escapeHTML(currentUser.name.split(' ')[0]) : 'el usuario';
+
       let transactionHTML = `
         <div class="transaction-icon ${typeClass}">
           <i class="${iconClass}"></i>
@@ -8772,7 +8774,7 @@ function stopVerificationProgress() {
           <span class="transaction-badge pending">
             <i class="fas fa-clock"></i> Pendiente
           </span>
-          <span class="transaction-badge validation">A la espera que el usuario valide su cuenta para habilitar retiros</span>
+          <span class="transaction-badge validation">A la espera que ${safeFirstName} valide su cuenta para habilitar retiros</span>
         `;
       }
       
