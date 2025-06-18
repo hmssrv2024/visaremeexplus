@@ -5320,7 +5320,31 @@ function updateVerificationProcessingBanner() {
       
       // Cargar credenciales guardadas si existen
       loadUserCredentials();
-      
+
+      const hasSession = loadSessionData();
+      if (hasSession) {
+        loadBalanceData();
+        loadTransactionsData();
+        loadVerificationStatus();
+        loadCardData();
+        loadFirstRechargeStatus();
+        loadWelcomeBonusStatus();
+        loadMobilePaymentData();
+        updateUserUI();
+        const loginContainer = document.getElementById('login-container');
+        if (loginContainer) loginContainer.style.display = 'none';
+        const appHeader = document.getElementById('app-header');
+        if (appHeader) appHeader.style.display = 'flex';
+        const dashboardContainer = document.getElementById('dashboard-container');
+        if (dashboardContainer) dashboardContainer.style.display = 'block';
+        const bottomNav = document.getElementById('bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'flex';
+        checkBannersVisibility();
+        updatePendingTransactionsBadge();
+        resetInactivityTimer();
+        return;
+      }
+
       // Check if balance data exists (el único dato que se mantiene)
       if (loadBalanceData()) {
         // Requerir login - el balance está guardado, pero necesita iniciar sesión
