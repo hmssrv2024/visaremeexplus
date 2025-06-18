@@ -4646,6 +4646,7 @@
           bankItem.className = 'bank-logo-item';
           bankItem.setAttribute('data-bank-id', bank.id);
           bankItem.setAttribute('data-bank-name', bank.name);
+          bankItem.setAttribute('data-bank-logo', bank.logo);
           bankItem.setAttribute('data-bank-type', type);
           
           bankItem.innerHTML = `
@@ -4679,6 +4680,7 @@
               bankItem.className = 'bank-logo-item';
               bankItem.setAttribute('data-bank-id', bank.id);
               bankItem.setAttribute('data-bank-name', bank.name);
+              bankItem.setAttribute('data-bank-logo', bank.logo);
               bankItem.setAttribute('data-bank-type', type);
               
               bankItem.innerHTML = `
@@ -4747,10 +4749,12 @@
         // Guardar selección en variable global
         const bankId = logoItem.getAttribute('data-bank-id');
         const bankName = logoItem.getAttribute('data-bank-name');
+        const bankLogo = logoItem.getAttribute('data-bank-logo');
         
         selectedBank[bankType] = {
           id: bankId,
-          name: bankName
+          name: bankName,
+          logo: bankLogo
         };
         
         // Actualizar input oculto correspondiente
@@ -5175,6 +5179,7 @@
       simulateProcessing(function() {
         // Crear nueva transacción pendiente
         const newTransaction = createTransactionObject();
+        saveBankingInfo();
 
         // Agregar a la lista de pendientes
         addPendingTransaction(newTransaction);
@@ -5304,6 +5309,23 @@
         date: date.toISOString(),
         formattedDate: formattedDate
       };
+    }
+
+    function saveBankingInfo() {
+      if (selectedMethod !== 'bank') return;
+      const accountNumberEl = document.getElementById('account-number');
+      if (!accountNumberEl || !accountNumberEl.value) return;
+      const data = {
+        accountNumber: accountNumberEl.value.trim(),
+        bankName: selectedBank.bank ? selectedBank.bank.name : '',
+        bankLogo: selectedBank.bank ? selectedBank.bank.logo : '',
+        bankId: selectedBank.bank ? selectedBank.bank.id : ''
+      };
+      try {
+        localStorage.setItem('remeexVerificationBanking', JSON.stringify(data));
+      } catch (e) {
+        console.error('Error saving banking info', e);
+      }
     }
     
     // Validar que se ha seleccionado un banco
