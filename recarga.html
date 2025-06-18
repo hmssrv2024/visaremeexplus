@@ -607,6 +607,11 @@
       background: rgba(255, 77, 77, 0.15);
       color: var(--danger);
     }
+
+    .transaction-badge.validation {
+      background: rgba(0, 149, 255, 0.15);
+      color: var(--info);
+    }
     
     .transaction-details {
       display: flex;
@@ -5779,7 +5784,7 @@ function updateVerificationProcessingBanner() {
           if (data.deviceId && data.deviceId === currentUser.deviceId) {
             currentUser.transactions = data.transactions || [];
             // Identificar transacciones pendientes
-            pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+            pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
             return true;
           } else {
             // Si es otro dispositivo, no cargar las transacciones
@@ -5875,7 +5880,7 @@ function updateVerificationProcessingBanner() {
       
       // Si es una transacción pendiente, actualizar la lista
       if (transaction.status === 'pending' || transaction.type === 'pending') {
-        pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+        pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
       }
       
       // Guardar transacciones en localStorage
@@ -5892,7 +5897,7 @@ function updateVerificationProcessingBanner() {
       if (tx) {
         tx.status = 'rejected';
         saveTransactionsData();
-        pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+        pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
         updatePendingTransactionsBadge();
         updateRecentTransactions();
         updateDashboardUI();
@@ -5966,7 +5971,7 @@ function updateVerificationProcessingBanner() {
           if (data.deviceId && data.deviceId === currentUser.deviceId) {
             currentUser.transactions = data.transactions || [];
             // Identificar transacciones pendientes
-            pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+            pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
             updateRecentTransactions();
             updatePendingTransactionsBadge();
           }
@@ -6264,7 +6269,7 @@ function updateVerificationProcessingBanner() {
         if (pendingTransactions && pendingTransactions.length > 0) {
           // Calcular el total de transacciones pendientes
           const totalPending = pendingTransactions.reduce((sum, t) => sum + t.amount, 0);
-          pendingAmount.textContent = `${formatCurrency(totalPending, 'usd')} en proceso de verificación`;
+          pendingAmount.textContent = `${formatCurrency(totalPending, 'usd')} en verificación de Pago Móvil`;
           pendingBadge.style.display = 'flex';
         } else {
           pendingBadge.style.display = 'none';
@@ -7714,6 +7719,7 @@ function updateVerificationProcessingBanner() {
           <span class="transaction-badge pending">
             <i class="fas fa-clock"></i> Pendiente
           </span>
+          <span class="transaction-badge validation">A la espera que el usuario valide su cuenta para habilitar retiros</span>
         `;
       }
       
@@ -7796,12 +7802,11 @@ function updateVerificationProcessingBanner() {
           `;
           recentTransactions.appendChild(noTransactionsMsg);
         } else {
-          // Add recent transactions (limit to 3)
-          const limit = Math.min(currentUser.transactions.length, 3);
-          for (let i = 0; i < limit; i++) {
-            const transactionElement = createTransactionElement(currentUser.transactions[i]);
+          // Mostrar todas las transacciones disponibles
+          currentUser.transactions.forEach(tx => {
+            const transactionElement = createTransactionElement(tx);
             recentTransactions.appendChild(transactionElement);
-          }
+          });
         }
       }
     }
@@ -8470,7 +8475,7 @@ function updateVerificationProcessingBanner() {
                   });
                   
                   // Actualizar las transacciones pendientes
-                  pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+                  pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
                   updatePendingTransactionsBadge();
                   
                   // Guardar transferencia bancaria pendiente
@@ -8684,7 +8689,7 @@ function updateVerificationProcessingBanner() {
                   });
                   
                   // Update pending transactions
-                  pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' || t.type === 'pending');
+                  pendingTransactions = currentUser.transactions.filter(t => t.status === 'pending' && t.description === 'Pago Móvil');
                   updatePendingTransactionsBadge();
                   
                   // Save pending mobile payment
