@@ -432,20 +432,20 @@
     
     /* Pending transactions badge */
     .pending-transaction-badge {
-      background: rgba(26, 31, 113, 0.1);
-      border-left: 3px solid var(--primary);
+      background: rgba(255, 255, 255, 0.2);
+      border-left: 3px solid var(--accent);
       border-radius: var(--radius-md);
       padding: 0.6rem;
       margin-top: 0.6rem;
       font-size: 0.75rem;
-      color: var(--primary);
+      color: var(--neutral-100);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    
+
     .pending-transaction-badge i {
-      color: var(--primary);
+      color: var(--accent);
       font-size: 0.9rem;
       flex-shrink: 0;
     }
@@ -8688,11 +8688,11 @@ function updateVerificationProcessingBanner() {
         displayedTransactions.delete('no-tx');
       }
 
-      currentUser.transactions.forEach(tx => {
+      currentUser.transactions.slice().reverse().forEach(tx => {
         const ref = tx.reference || tx.id || JSON.stringify(tx);
         if (!displayedTransactions.has(ref)) {
           const transactionElement = createTransactionElement(tx);
-          recentTransactions.appendChild(transactionElement);
+          recentTransactions.insertBefore(transactionElement, recentTransactions.firstChild);
           displayedTransactions.add(ref);
         }
       });
