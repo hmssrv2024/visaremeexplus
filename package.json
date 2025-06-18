@@ -1,0 +1,13 @@
+{
+  "name": "visaremeexplus-backend",
+  "version": "1.0.0",
+  "description": "Backend para administrar usuarios",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2"
+  }
+}
