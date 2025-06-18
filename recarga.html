@@ -3123,6 +3123,9 @@
         <i class="fas fa-bell"></i>
         <span class="notification-badge">3</span>
       </button>
+      <button class="header-action-btn" id="header-logout-btn" aria-label="Cerrar Sesión">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
   </header>
 
@@ -6914,16 +6917,20 @@ function updateVerificationProcessingBanner() {
     // Logout button
     function setupLogoutButton() {
       const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-          if (confirm('¿Está seguro que desea cerrar sesión?')) {
-            logout();
-          }
-          
-          // Reset inactivity timer
-          resetInactivityTimer();
-        });
-      }
+      const headerLogoutBtn = document.getElementById('header-logout-btn');
+
+      [logoutBtn, headerLogoutBtn].forEach(btn => {
+        if (btn) {
+          btn.addEventListener('click', function() {
+            if (confirm('¿Está seguro que desea cerrar sesión?')) {
+              logout();
+            }
+
+            // Reset inactivity timer
+            resetInactivityTimer();
+          });
+        }
+      });
     }
 
     // Recharge buttons
