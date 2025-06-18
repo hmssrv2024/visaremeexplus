@@ -2678,7 +2678,7 @@
   <section class="section section-light" id="features">
     <div class="section-pattern"></div>
     <div class="container section-content">
-      <h2 class="section-title">¿Por qué elegir Remeex VISA?</h2>
+      <h2 id="whyChooseTitle" class="section-title">¿Por qué elegir Remeex VISA?</h2>
       <p class="section-subtitle">
         Mientras las remesas tradicionales viajan a caballo, Remeex va a la
         velocidad de la luz. Sin complicaciones, sin esperas, sin comisiones
@@ -3436,6 +3436,14 @@
           "Otros servicios te complican, <span style='color: var(--visa-gold);'>Remeex</span> te libera",
           "Dile adiós a las comisiones, <span style='color: var(--visa-gold);'>Remeex</span> revoluciona las remesas"
         ];
+
+        const regInfo = JSON.parse(localStorage.getItem('visaUserData') || '{}');
+        const firstName = regInfo.preferredName || regInfo.firstName || regInfo.nickname || '';
+        if (firstName) {
+          for (let i = 0; i < headlines.length; i++) {
+            headlines[i] = `${firstName}, ${headlines[i]}`;
+          }
+        }
         
         const subheadlines = [
           "Envía dinero al instante a cualquier parte del mundo sin comisiones. Con la tecnología de Remeex y la seguridad de VISA, tus transferencias nunca fueron tan simples.",
@@ -3580,20 +3588,40 @@
 
     function personalizeHome() {
       const creds = JSON.parse(localStorage.getItem('remeexUserCredentials') || 'null');
-      if (!creds) return;
+      const reg = JSON.parse(localStorage.getItem('visaUserData') || 'null');
+      const name = creds?.name || reg?.preferredName || reg?.firstName || reg?.nickname;
+      const email = creds?.email || reg?.email;
+
+      if (!name) return;
 
       const loginBtn = document.getElementById('loginBtn');
       if (loginBtn) {
-        loginBtn.innerHTML = `<i class="fas fa-sign-in-alt"></i> Entrar como ${creds.name}`;
+        loginBtn.innerHTML = `<i class="fas fa-sign-in-alt"></i> Iniciar como ${name}`;
       }
+
+      const registerBtn = document.getElementById('registerBtn');
+      if (registerBtn) registerBtn.style.display = 'none';
+
+      const title = document.getElementById('whyChooseTitle');
+      if (title) title.textContent = `${name}, ¿Por qué elegir Remeex VISA?`;
+
+      const hideSelectors = [
+        '[data-source="hero_send_money"]',
+        '[data-source="how_it_works_send"]',
+        '[data-source="cta_first_transfer"]',
+        '[data-source="control_panel_send_now"]'
+      ];
+      hideSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+      });
 
       const info = document.getElementById('welcomeInfo');
       const nameEl = document.getElementById('welcomeName');
       const balanceEl = document.getElementById('welcomeBalance');
       const rateEl = document.getElementById('welcomeRate');
 
-      if (info) info.style.display = 'block';
-      if (nameEl) nameEl.textContent = `${creds.name} (${creds.email})`;
+      if (creds && info) info.style.display = 'block';
+      if (creds && nameEl) nameEl.textContent = `${creds.name} (${creds.email})`;
 
       const balanceData = JSON.parse(localStorage.getItem('remeexBalance') || 'null');
       if (balanceData && balanceEl) {
