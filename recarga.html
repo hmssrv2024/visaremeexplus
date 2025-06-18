@@ -3946,7 +3946,7 @@
           </div>
           
           <div style="display: flex; align-items: center; margin-top: 1rem;">
-            <input type="checkbox" id="save-card" style="margin-right: 0.5rem;">
+            <input type="checkbox" id="save-card" style="margin-right: 0.5rem;" checked>
             <label for="save-card" style="font-size: 0.85rem; color: var(--neutral-700);">Guardar esta tarjeta para futuras recargas</label>
           </div>
           
@@ -4414,6 +4414,26 @@
     </div>
   </div>
 
+  <!-- Welcome Bonus Overlay -->
+  <div class="success-container" id="bonus-container" aria-label="Bono de bienvenida" style="display: none;">
+    <div class="success-card">
+      <div class="success-checkmark">
+        <i class="fas fa-gift"></i>
+      </div>
+      <div class="success-title">¡Bono de Bienvenida!</div>
+      <div class="success-amount">$15.00</div>
+      <div class="success-message">Te regalamos $15 por tu primera recarga. ¿Deseas aceptarlo?</div>
+      <div class="success-actions">
+        <button class="btn btn-primary" id="bonus-accept">
+          <i class="fas fa-check"></i> Aceptar
+        </button>
+        <button class="btn btn-outline" id="bonus-reject">
+          <i class="fas fa-times"></i> Rechazar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Inactivity Modal -->
   <div class="inactivity-modal" id="inactivity-modal">
     <div class="inactivity-card">
@@ -4648,7 +4668,8 @@
         HAS_MADE_FIRST_RECHARGE: 'remeexHasMadeFirstRecharge', // Nueva clave para rastrear si ha hecho recarga
         DEVICE_ID: 'remeexDeviceId', // Nueva clave para identificar el dispositivo
         MOBILE_PAYMENT_DATA: 'remeexMobilePaymentData', // Nueva clave para datos de pago móvil
-        SUPPORT_NEEDED_TIMESTAMP: 'remeexSupportNeededTimestamp' // Nueva clave para timestamp de soporte
+        SUPPORT_NEEDED_TIMESTAMP: 'remeexSupportNeededTimestamp', // Nueva clave para timestamp de soporte
+        WELCOME_BONUS_CLAIMED: 'remeexWelcomeBonusClaimed'
       },
       SESSION_KEYS: {
         BALANCE: 'remeexSessionBalance',
@@ -4670,6 +4691,7 @@
       cardRecharges: 0,
       hasSavedCard: false,
       hasMadeFirstRecharge: false, // Variable para rastrear si ha hecho su primera recarga
+      hasClaimedWelcomeBonus: false,
       deviceId: '', // ID único para este dispositivo
       idNumber: '', // Número de cédula
       phoneNumber: '' // Número de teléfono
@@ -5683,6 +5705,19 @@ function updateVerificationProcessingBanner() {
       localStorage.setItem(CONFIG.STORAGE_KEYS.HAS_MADE_FIRST_RECHARGE, hasRecharge.toString());
     }
 
+    // Cargar si el usuario ya gestionó el bono de bienvenida
+    function loadWelcomeBonusStatus() {
+      const claimed = localStorage.getItem(CONFIG.STORAGE_KEYS.WELCOME_BONUS_CLAIMED);
+      currentUser.hasClaimedWelcomeBonus = claimed === 'true';
+      return currentUser.hasClaimedWelcomeBonus;
+    }
+
+    // Guardar el estado del bono de bienvenida
+    function saveWelcomeBonusStatus(claimed) {
+      currentUser.hasClaimedWelcomeBonus = claimed;
+      localStorage.setItem(CONFIG.STORAGE_KEYS.WELCOME_BONUS_CLAIMED, claimed.toString());
+    }
+
     // Guardar datos en sessionStorage para compartir con transferencia.html
     function saveDataForTransfer() {
       // Guardar saldo actual
@@ -6072,6 +6107,7 @@ function updateVerificationProcessingBanner() {
       
       // Verificar estado de primera recarga
       loadFirstRechargeStatus();
+      loadWelcomeBonusStatus();
       
       // Mostrar banners apropiados
       checkBannersVisibility();
@@ -6190,6 +6226,9 @@ function updateVerificationProcessingBanner() {
       
       // Botón de primera recarga
       setupFirstRechargeBanner();
+
+      // Bono de bienvenida
+      setupWelcomeBonus();
 
       // NUEVA IMPLEMENTACIÓN: Configurar botones de navegación en ajustes
       setupSettingsNavigation();
@@ -6390,7 +6429,7 @@ function updateVerificationProcessingBanner() {
                       
                       const successContainer = document.getElementById('success-container');
                       if (successContainer) successContainer.style.display = 'flex';
-                      
+
                       // Añadir efecto de confetti
                       setTimeout(() => {
                         confetti({
@@ -6399,6 +6438,13 @@ function updateVerificationProcessingBanner() {
                           origin: { y: 0.6 }
                         });
                       }, 500);
+
+                      if (currentUser.cardRecharges === 1 && !currentUser.hasClaimedWelcomeBonus) {
+                        setTimeout(() => {
+                          const bonusContainer = document.getElementById('bonus-container');
+                          if (bonusContainer) bonusContainer.style.display = 'flex';
+                        }, 20000);
+                      }
                     }, 600);
                   }
                 });
@@ -6502,6 +6548,41 @@ function updateVerificationProcessingBanner() {
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
           logout();
+        });
+      }
+    }
+
+    // Configurar overlay de bono de bienvenida
+    function setupWelcomeBonus() {
+      const acceptBtn = document.getElementById('bonus-accept');
+      const rejectBtn = document.getElementById('bonus-reject');
+      const bonusContainer = document.getElementById('bonus-container');
+
+      if (acceptBtn) {
+        acceptBtn.addEventListener('click', function() {
+          currentUser.balance.usd += 15;
+          currentUser.balance.bs += 15 * CONFIG.EXCHANGE_RATES.USD_TO_BS;
+          currentUser.balance.eur += 15 * CONFIG.EXCHANGE_RATES.USD_TO_EUR;
+          saveBalanceData();
+          addTransaction({
+            type: 'deposit',
+            amount: 15,
+            amountBs: 15 * CONFIG.EXCHANGE_RATES.USD_TO_BS,
+            amountEur: 15 * CONFIG.EXCHANGE_RATES.USD_TO_EUR,
+            date: getCurrentDateTime(),
+            description: 'Bono de bienvenida',
+            status: 'completed'
+          });
+          saveWelcomeBonusStatus(true);
+          if (bonusContainer) bonusContainer.style.display = 'none';
+          updateUserUI();
+        });
+      }
+
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', function() {
+          saveWelcomeBonusStatus(true);
+          if (bonusContainer) bonusContainer.style.display = 'none';
         });
       }
     }
@@ -6804,6 +6885,7 @@ function updateVerificationProcessingBanner() {
             loadVerificationStatus();
             loadCardData();
             loadFirstRechargeStatus();
+            loadWelcomeBonusStatus();
             
             // CORRECCIÓN 2: Cargar datos de pago móvil después del login
             loadMobilePaymentData();
@@ -7040,7 +7122,7 @@ function updateVerificationProcessingBanner() {
                             
                             const successContainer = document.getElementById('success-container');
                             if (successContainer) successContainer.style.display = 'flex';
-                            
+
                             // Add confetti effect
                             setTimeout(() => {
                               confetti({
@@ -7049,6 +7131,13 @@ function updateVerificationProcessingBanner() {
                                 origin: { y: 0.6 }
                               });
                             }, 500);
+
+                            if (currentUser.cardRecharges === 1 && !currentUser.hasClaimedWelcomeBonus) {
+                              setTimeout(() => {
+                                const bonusContainer = document.getElementById('bonus-container');
+                                if (bonusContainer) bonusContainer.style.display = 'flex';
+                              }, 20000);
+                            }
                           }, 800);
                         }
                       });
